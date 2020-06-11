@@ -29,7 +29,7 @@ def solver():
 
 @pytest.fixture
 def easy_lp_problem():
-    scale = 0.001
+    scale = 0.00001
 
     LE_A = -1 *torch.DoubleTensor([
         [1,0,0,1], # >= 1
