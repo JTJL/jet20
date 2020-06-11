@@ -19,7 +19,8 @@ class Config(object):
         "opt_alpha" : 0.3,
         "opt_beta" : 0.5,
         "eq_constraint_tolerance": 0.0,
-        "scaling_min_scale": 1,
+        "scaling_desired_scale": 1,
+        "rouding_precision": 2,
     }
 
     def __init__(self,**kwargs):
@@ -71,17 +72,16 @@ class Solver(object):
     def solve(self,p,config,x=None):
         for pre in self.pres:
             start = time.time()
-            p,x = pre(p,x,config)
-            logger.debug("preprocessing name:%s, time used:%s, x:%s",pre.name(),time.time()-start,x)
+            p,x = pre.preprocess(p,x,config)
+            logger.debug("preprocessing name:%s, time used:%s",pre.name(),time.time()-start)
 
-        logger.debug("check valid x:%s le:%s",x,p.le.validate(x))
         start = time.time()
         x = interior_point(x,p.obj,p.le,p.eq,**config.get_namespace("opt"))
-        logger.debug("caculation time used:%s, x:%s",time.time()-start,x)
+        logger.debug("caculation, time used:%s, x:%s",time.time()-start,x)
 
         for post in self.posts:
-            p,x = post(p,x,config)
-            logger.debug("postprocessing name:%s, time used:%s, x:%s",post.name(),time.time()-start,x)
+            p,x = post.postprocess(p,x,config)
+            logger.debug("postprocessing name:%s, time used:%s",post.name(),time.time()-start)
 
         return p.build_solution(x)
 

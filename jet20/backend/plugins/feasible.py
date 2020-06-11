@@ -33,7 +33,7 @@ class EnsureEqFeasible(Plugin):
         ret = [x.n() for x in list(ret)[0]]
         return eq.A.new(ret)
 
-    def __call__(self,p,x,config):
+    def preprocess(self,p,x,config):
         if not p.eq:
             return p,x
         
