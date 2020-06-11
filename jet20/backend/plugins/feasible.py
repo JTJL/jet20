@@ -11,14 +11,12 @@ from jet20.backend.core import interior_point
 import logging
 logger = logging.getLogger(__name__)
 
-class EqConstraitConflict(Exception):
-    pass
 
 class EnsureEqFeasible(Plugin):
 
     def find_feasible(self,eq):
-        A = eq.A.cpu().numpy()
-        b = eq.b.cpu().numpy()
+        A = eq.A.cpu()
+        b = eq.b.cpu()
         n = A.shape[1]
         
         A = Matrix(A)
@@ -51,10 +49,6 @@ class EnsureEqFeasible(Plugin):
         
         return p,x
              
-
-
-class LeConstraitConflict(Exception):
-    pass
 
 
 class EnsureLeFeasible(Plugin):

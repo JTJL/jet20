@@ -3,6 +3,14 @@
 import torch
 
 
+
+class LeConstraitConflict(Exception):
+    pass
+
+class EqConstraitConflict(Exception):
+    pass
+
+
 class LinearEqConstraints(object):
     def __init__(self,A,b):
         super(LinearEqConstraints,self).__init__()
