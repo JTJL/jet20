@@ -20,7 +20,7 @@ def scale_by(x,diff):
 class Scaling(Plugin):
 
     def __init__(self):
-        self.origin = None
+        pass
 
     def scale_m(self,a,desired_scale):
         s = calc_scale(a)
@@ -28,7 +28,7 @@ class Scaling(Plugin):
         return a
 
     def scale_row(self,a,b,desired_scale):
-        s = calc_scale(torch.cat([a,b.unsqueeze(-1)]))
+        s = calc_scale(a)
         a = scale_by(a,desired_scale-s)
         b = scale_by(b,desired_scale-s)
         return a,b
@@ -46,24 +46,25 @@ class Scaling(Plugin):
             
 
     def preprocess(self,p,x,config):
-        self.origin = p
-
         if p.le:
             p.le.A,p.le.b = self.scale(p.le.A,p.le.b,config.scaling_desired_scale)
         if p.eq:
             p.eq.A,p.eq.b = self.scale(p.eq.A,p.eq.b,config.scaling_desired_scale)
 
         if isinstance(p.obj,LinearObjective):
-            p.obj.c = self.scale_m(p.obj.c,config.scaling_desired_scale)
+            p.obj.b = self.scale_m(p.obj.b,config.scaling_desired_scale)
         
         if isinstance(p.obj,QuadraticObjective):
-            p.obj.c = self.scale_m(p.obj.c,config.scaling_desired_scale)
-            p.obj.A, = self.scale_m(p.obj.A,config.scaling_desired_scale)
+            # logger.debug("%s,%s",p.obj.A,p.obj.b)
+            n = p.obj.A.size(0)
+            m = self.scale_m(torch.cat([p.obj.A,p.obj.b.unsqueeze(0)],dim=0),config.scaling_desired_scale)
+            p.obj.A = m[0:n]
+            p.obj.b = m[n]
 
         return p,x
         
-    # def postprocess(self,p,x,config):
-    #     return self.origin,x
+    def postprocess(self,p,x,config):
+        return self.origin,x
         
 
 

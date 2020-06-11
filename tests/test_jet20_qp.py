@@ -14,14 +14,15 @@ logger = logging.getLogger(__name__)
 from jet20.backend import (Solver,EnsureEqFeasible,
                     EnsureLeFeasible,Rounding,Config,Problem,
                     LinearEqConstraints,LinearLeConstraints,
-                    QuadraticObjective,EqConstraitConflict,LeConstraitConflict)
+                    QuadraticObjective,EqConstraitConflict,LeConstraitConflict,Scaling,Simpify)
 
 
 @pytest.fixture
 def solver():
     s = Solver()
-    s.register_pres(EnsureEqFeasible(),EnsureLeFeasible())
-    s.register_posts(Rounding())
+    simpify = Simpify()
+    s.register_pres(simpify,Scaling(),EnsureLeFeasible())
+    s.register_posts(simpify,Rounding(),EnsureEqFeasible(),EnsureLeFeasible())
     return s
     
     
@@ -37,14 +38,15 @@ def easy_qp_problem():
 
 
     OBJ_A = torch.FloatTensor(np.diag([1,1,1,1]))
-    OBJ_C = torch.FloatTensor([1,1,1,1])
+    OBJ_B = torch.FloatTensor([1,1,1,1])
 
     eq = None
     # eq = LinearEqConstraints(EQ_A,EQ_B)
     le = LinearLeConstraints(LE_A,LE_B)
-    obj = QuadraticObjective(OBJ_A,OBJ_C)
+    obj = QuadraticObjective(OBJ_A,OBJ_B)
 
-    return Problem(obj,le,eq)
+    _vars = [ "x_%s" for i in range(4) ]
+    return Problem(_vars,obj,le,eq)
 
 
 def test_basic(solver,easy_qp_problem):

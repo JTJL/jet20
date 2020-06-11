@@ -1,12 +1,11 @@
 
 import torch
 import time
+import copy
 from jet20.backend.constraints import *
 from jet20.backend.obj import *
 from jet20.backend.core.interior_point import interior_point
-from jet20.backend.plugins.feasible import *
-from jet20.backend.plugins.scaling import *
-from jet20.backend.plugins.simpify import *
+
 
 import logging
 logger = logging.getLogger(__name__)
@@ -21,11 +20,14 @@ class Config(object):
         "eq_constraint_tolerance": 0.0,
         "scaling_desired_scale": 1,
         "rouding_precision": 2,
+        "precision": "double",
+        "device": "cuda",
     }
 
     def __init__(self,**kwargs):
         self.__dict__.update(**self.__default_config__)
         self.__dict__.update(kwargs)
+        self.device = torch.device(self.device)
 
     def get_namespace(self,namespace):
         rv = {}
@@ -48,20 +50,18 @@ class Solution(object):
 
 
 class Problem(object):
-    def __init__(self,obj,le_cons=None,eq_cons=None,free_vars=None,fix_vars=None):
+    def __init__(self,_vars,obj,le_cons=None,eq_cons=None):
         self.obj = obj
         self.le = le_cons
         self.eq = eq_cons
-        self.fix_vars = fix_vars or {}
-        self.free_vars = free_vars or []
+        self.vars = _vars
+        self.n = len(_vars)
 
 
     def build_solution(self,x):
         obj_value = self.obj(x).item()
-        vars = { var: v.item() for var,v in zip(self.free_vars,x)}
-        vars.update(self.fix_vars)
-        return Solution(obj_value,vars,x.cpu().numpy())
-        
+        _vars = { var: v.item() for var,v in zip(self.vars,x)}
+        return Solution(obj_value,_vars,x.cpu().numpy())
 
 
 class Solver(object):
@@ -70,6 +70,8 @@ class Solver(object):
         self.posts = []
 
     def solve(self,p,config,x=None):
+        origin_p = copy.deepcopy(p)
+
         for pre in self.pres:
             start = time.time()
             p,x = pre.preprocess(p,x,config)
@@ -77,8 +79,9 @@ class Solver(object):
 
         start = time.time()
         x = interior_point(x,p.obj,p.le,p.eq,**config.get_namespace("opt"))
-        logger.debug("caculation, time used:%s, x:%s",time.time()-start,x)
+        logger.debug("caculation, time used:%s",time.time()-start)
 
+        p = origin_p
         for post in self.posts:
             p,x = post.postprocess(p,x,config)
             logger.debug("postprocessing name:%s, time used:%s",post.name(),time.time()-start)

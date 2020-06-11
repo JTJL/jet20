@@ -14,13 +14,15 @@ logger = logging.getLogger(__name__)
 from jet20.backend import (Solver,EnsureEqFeasible,EnsureLeFeasible,
                             Scaling,Rounding,Config,Problem,LinearEqConstraints,
                             LinearLeConstraints,LinearObjective,
-                            EqConstraitConflict,LeConstraitConflict)
+                            EqConstraitConflict,LeConstraitConflict,
+                            Simpify)
 
 @pytest.fixture
 def solver():
     s = Solver()
-    s.register_pres(Scaling(),EnsureEqFeasible(),EnsureLeFeasible())
-    s.register_posts(Rounding())
+    simpify = Simpify()
+    s.register_pres(simpify,Scaling(),EnsureLeFeasible())
+    s.register_posts(simpify,Rounding(),EnsureEqFeasible(),EnsureLeFeasible())
     return s
     
     
@@ -55,12 +57,31 @@ def easy_lp_problem():
     le = LinearLeConstraints(LE_A,LE_B)
     obj = LinearObjective(OBJ_C)
 
-    return Problem(obj,le,eq)
+    _vars = [ "x_%s" for i in range(4) ]
+    return Problem(_vars,obj,le,eq)
 
 
 @pytest.fixture
+def easy_lp_problem2():
+
+    A = np.load("A.npy")
+    B = np.load("B.npy")
+    C = np.ones(A.shape[1])
+
+    A = torch.DoubleTensor(A)
+    B = torch.DoubleTensor(B)
+    OBJ_C = torch.DoubleTensor(C)
+
+    eq = None
+    le = LinearLeConstraints(A,B)
+    obj = LinearObjective(OBJ_C)
+
+    _vars = [ "x_%s" for i in range(A.shape[1]) ]
+    return Problem(_vars,obj,le,eq)
+
+@pytest.fixture
 def bad_eq_lp_problem():
-    LE_A = -1 *torch.FloatTensor([
+    LE_A = -1 * torch.FloatTensor([
         [1,0,0,1], # >= 1
         [0,1,0,1], # >= 1
         [1,0,0,0],
@@ -84,7 +105,8 @@ def bad_eq_lp_problem():
     le = LinearLeConstraints(LE_A,LE_B)
     obj = LinearObjective(OBJ_C)
 
-    return Problem(obj,le,eq)
+    _vars = [ "x_%s" for i in range(4) ]
+    return Problem(_vars,obj,le,eq)
 
 
 @pytest.fixture
@@ -114,7 +136,8 @@ def bad_le_lp_problem():
     le = LinearLeConstraints(LE_A,LE_B)
     obj = LinearObjective(OBJ_C)
 
-    return Problem(obj,le,eq)
+    _vars = [ "x_%s" for i in range(4) ]
+    return Problem(_vars,obj,le,eq)
 
 
 
@@ -133,6 +156,13 @@ def test_bad_lp_problem(solver,bad_eq_lp_problem):
 def test_bad_eq_problem(solver,bad_le_lp_problem):
     with pytest.raises(LeConstraitConflict):
         solver.solve(bad_le_lp_problem,Config())
+
+
+def test_basic_eq_problem_2(solver,easy_lp_problem2):
+    solution = solver.solve(easy_lp_problem2,Config(opt_max_cnt=100,opt_tolerance=1e-20))
+    print (solution)
+    assert solution.obj_value <= 9.983
+    # assert (solution.x == np.array([0.5,0.5,0.5,0.5])).all()
 
 
 # def test_scale(easy_lp_problem):
