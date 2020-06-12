@@ -14,10 +14,10 @@ class Config(object):
     __default_config__ = {
         "opt_tolerance" : 1e-10,
         "opt_u" : 10.0,
-        "opt_max_cnt" : 100,
+        "opt_max_cnt" : 0,
         "opt_alpha" : 0.3,
         "opt_beta" : 0.5,
-        "eq_constraint_tolerance": 0.0,
+        "eq_constraint_tolerance": 1e-3,
         "scaling_desired_scale": 1,
         "rouding_precision": 2,
         "precision": "double",
@@ -83,6 +83,7 @@ class Solver(object):
 
         p = origin_p
         for post in self.posts:
+            start = time.time()
             p,x = post.postprocess(p,x,config)
             logger.debug("postprocessing name:%s, time used:%s",post.name(),time.time()-start)
 

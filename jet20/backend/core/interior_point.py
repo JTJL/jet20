@@ -4,7 +4,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def line_search(f,x,search_dir,g,alpha=0.3,beta=0.5,max_cnt=100):
+def line_search(f,x,search_dir,g,alpha=0.3,beta=0.5,max_cnt=0):
     t = 1.0
     f_delta_x = f(x + search_dir * t)
     f_x = f(x)
@@ -15,13 +15,13 @@ def line_search(f,x,search_dir,g,alpha=0.3,beta=0.5,max_cnt=100):
         t = beta * t
         f_delta_x = f(x + search_dir * t)
         _c += 1
-        if _c > max_cnt:
+        if max_cnt > 0 and _c >= max_cnt:
             return 0.0, True
         
     return t,False
     
 
-def newton(x,obj,le_cons = None,eq_cons=None,should_stop=None,t = 1.0,tolerance=1e-10, max_cnt=100, alpha=0.3, beta=0.5):
+def newton(x,obj,le_cons = None,eq_cons=None,should_stop=None,t = 1.0,tolerance=1e-10, max_cnt=0, alpha=0.3, beta=0.5):
     _c = 0
     
     if le_cons is not None:
@@ -40,7 +40,7 @@ def newton(x,obj,le_cons = None,eq_cons=None,should_stop=None,t = 1.0,tolerance=
         except RuntimeError as e:
             #todo: Determine whether it is optimal and switch to gradient desent if needed
             #for now: just skip
-            # logger.error(e,exc_info=True)
+            logger.error(e,exc_info=True)
             # logger.warn("no inverse for hessian matrix")
             if not str(e).startswith("inverse_"):
                 raise e
@@ -71,7 +71,7 @@ def newton(x,obj,le_cons = None,eq_cons=None,should_stop=None,t = 1.0,tolerance=
             return x,False
 
         _c += 1      
-        if _c >= max_cnt:
+        if max_cnt > 0 and _c >= max_cnt:
             return x,True
 
 

@@ -1,9 +1,6 @@
 
 import torch
 
-from sympy import symarray,Matrix
-from sympy.solvers.solveset import linsolve
-
 from jet20.backend.plugins import Plugin
 from jet20.backend.constraints import *
 from jet20.backend.core import interior_point
@@ -14,33 +11,29 @@ logger = logging.getLogger(__name__)
 
 class EnsureEqFeasible(Plugin):
 
-    def find_feasible(self,eq):
-        A = eq.A.cpu()
-        b = eq.b.cpu()
-        n = A.shape[1]
-        
-        A = Matrix(A)
-        b = Matrix(b)
-        x = symarray('x', n)
+    def find_feasible(self,eq,config):
+        A = eq.A
+        b = eq.b
 
-        ret = linsolve((A,b), *x) 
-        if ret.is_empty:
+        u,_lambda,v = A.svd()
+        x = v @ torch.diag(_lambda**-1) @  u.T @ b
+
+        if not eq.validate(x,config.eq_constraint_tolerance):
+            logger.debug("delta:%s",A @ v - b)
             raise EqConstraitConflict("confilct in eq constraints")
-        
-        ret = ret.subs({ x: 0 for x in ret.free_symbols})
-        ret = [x.n() for x in list(ret)[0]]
-        return eq.A.new(ret)
+
+        return x
 
     def preprocess(self,p,x,config):
         if not p.eq:
             return p,x
         
         if x is None:
-            return p,self.find_feasible(p.eq)
+            return p,self.find_feasible(p.eq,config)
 
         if not p.eq.validate(x):
             logger.warn("x is not a feasible solution, eq constraints not satisfied")
-            return p,self.find_feasible(p.eq)
+            return p,self.find_feasible(p.eq,config)
 
 
     def postprocess(self,p,x,config):
