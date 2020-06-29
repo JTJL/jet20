@@ -13,7 +13,7 @@ class Config(object):
 
     def __init__(self,**kwargs):
         self.__dict__.update(**self.__default_config__)
-        self.__dict__.update(kwargs)
+        self.__dict__.update(**kwargs)
         self.device = torch.device(self.device)
 
     def get_namespace(self,namespace):
