@@ -17,11 +17,9 @@ logging.basicConfig(level="DEBUG")
 logger = logging.getLogger(__name__)
 
 from jet20.backend import (Solver,EnsureEqFeasible,EnsureLeFeasible,
-                            Scaling,Rounding,Config,Problem,LinearEqConstraints,
+                            Rounding,Config,Problem,LinearEqConstraints,
                             LinearLeConstraints,LinearObjective,
-                            EqConstraitConflict,LeConstraitConflict,
-                            Simpify)
-
+                            EqConstraitConflict,LeConstraitConflict)
 
 
 def read_mps_preprocess(filepath):
@@ -61,40 +59,26 @@ def read_mps_preprocess(filepath):
 
 
 @pytest.fixture
-def solver():
+def basic_solver():
     s = Solver()
     # simpify = Simpify()
-    # Rounding() EnsureEqFeasible(),
-    # Scaling(),
     s.register_pres(EnsureEqFeasible(),EnsureLeFeasible())
-    s.register_posts(EnsureLeFeasible())
+    s.register_posts(Rounding(),EnsureEqFeasible(),EnsureLeFeasible())
     return s
-    
+
 
 @pytest.fixture
 def benchmark_problem():
     c,G,h,A,b = read_mps_preprocess("cre-a")
+    _vars = [ "x_%s" % i for i in range(c.size) ]
+    return Problem.from_numpy(_vars,(None,c,None),(G,h),(A,b))
 
-    c,G,h,A,b = [ torch.DoubleTensor(x) for x in [c,G,h,A,b] ]
-
-    eq = LinearEqConstraints(A,b)
-    le = LinearLeConstraints(G,h)
-    obj = LinearObjective(c)
-
-    _vars = [ "x_%s" for i in range(c.size(0)) ]
-    return Problem(_vars,obj,le,eq)
-
-
-
-
-##max_scale : 10000000
-##min_scale : 
 
 @pytest.fixture
 def easy_lp_problem():
-    scale = 0.00001
+    scale = 1
 
-    LE_A = -1 *torch.DoubleTensor([
+    LE_A = -1 * np.array([
         [1,0,0,1], # >= 1
         [0,1,0,1], # >= 1
         [1,0,0,0], 
@@ -103,42 +87,21 @@ def easy_lp_problem():
         [0,0,0,1],
     ]) * scale
 
-    LE_B = -1 * torch.DoubleTensor([1,1,0,0,0,0]) * scale
+    LE_B = -1 * np.array([1,1,0,0,0,0]) * scale
 
-    EQ_A = torch.DoubleTensor([
+    EQ_A = np.array([
         [1,1,0,0], #==1
         [0,1,1,0], #==1
     ]) * scale
 
-    EQ_B = torch.DoubleTensor([1,1]) * scale
+    EQ_B = np.array([1,1]) * scale
 
-    OBJ_C = torch.DoubleTensor([2,3,1,5]) * scale
+    OBJ_C = np.array([2,3,1,5]) * scale
 
-    eq = LinearEqConstraints(EQ_A,EQ_B)
-    le = LinearLeConstraints(LE_A,LE_B)
-    obj = LinearObjective(OBJ_C)
-
-    _vars = [ "x_%s" for i in range(4) ]
-    return Problem(_vars,obj,le,eq)
+    _vars = [ "x_%s" % i for i in range(4) ]
+    return Problem.from_numpy(_vars,(None,OBJ_C,None),(LE_A,LE_B),(EQ_A,EQ_B),torch.device("cpu"),torch.float32)
 
 
-@pytest.fixture
-def easy_lp_problem2():
-
-    A = np.load("A.npy")
-    B = np.load("B.npy")
-    C = np.ones(A.shape[1])
-
-    A = torch.DoubleTensor(A)
-    B = torch.DoubleTensor(B)
-    OBJ_C = torch.DoubleTensor(C)
-
-    eq = None
-    le = LinearLeConstraints(A,B)
-    obj = LinearObjective(OBJ_C)
-
-    _vars = [ "x_%s" for i in range(A.shape[1]) ]
-    return Problem(_vars,obj,le,eq)
 
 @pytest.fixture
 def bad_eq_lp_problem():
@@ -166,7 +129,7 @@ def bad_eq_lp_problem():
     le = LinearLeConstraints(LE_A,LE_B)
     obj = LinearObjective(OBJ_C)
 
-    _vars = [ "x_%s" for i in range(4) ]
+    _vars = [ "x_%s" % i for i in range(4) ]
     return Problem(_vars,obj,le,eq)
 
 
@@ -192,59 +155,71 @@ def bad_le_lp_problem():
     EQ_B = torch.FloatTensor([1,1])
 
     OBJ_C = torch.FloatTensor([2,3,1,5])
+    _vars = [ "x_%s" % i for i in range(4) ]
 
-    eq = LinearEqConstraints(EQ_A,EQ_B)
-    le = LinearLeConstraints(LE_A,LE_B)
-    obj = LinearObjective(OBJ_C)
-
-    _vars = [ "x_%s" for i in range(4) ]
-    return Problem(_vars,obj,le,eq)
+    return Problem.from_numpy(_vars,(None,OBJ_C,None),(LE_A,LE_B),(EQ_A,EQ_B),torch.device("cpu"),torch.float32)
 
 
+@pytest.fixture
+def random_benchmark_problem():
+    import numpy as np
+    np.random.seed(42)
+
+    N = 400
+    M1 = 800
+    R = 40
+
+    A1 = np.zeros((M1,N))
+
+    for i in range(M1):
+        indexs = np.random.choice(N, size=R, replace=False)
+        A1[i,indexs] = np.abs(np.random.randn(R))
+
+    A1 = -1 * A1
+    A2 = -1 * np.diag(np.ones(N))
+
+    A = np.concatenate([A1,A2],axis=0)
+        
+    B1 = -1 * np.ones(M1)
+    B2 = -1 * np.zeros(N)
+
+    B = np.concatenate([B1,B2])
+
+    b = np.ones(N)
+
+    _vars = [ "x_%s" % i for i in range(N) ]
+
+    p = Problem.from_numpy(_vars,(None,b,None),(A,B),None,torch.device("cpu"),torch.float32)    
+    return p
 
 
-
-# def test_basic(solver,easy_lp_problem):
-#     solution = solver.solve(easy_lp_problem,Config(opt_max_cnt=100,opt_tolerance=1e-20))
-#     print (solution)
-#     # assert solution.obj_value == 55
-#     assert (solution.x == np.array([0.5,0.5,0.5,0.5])).all()
-
-
-# def test_bad_lp_problem(solver,bad_eq_lp_problem):
-#     with pytest.raises(EqConstraitConflict):
-#         solver.solve(bad_eq_lp_problem,Config())
-
-
-# def test_bad_eq_problem(solver,bad_le_lp_problem):
-#     with pytest.raises(LeConstraitConflict):
-#         solver.solve(bad_le_lp_problem,Config())
-
-
-# def test_basic_eq_problem_2(solver,easy_lp_problem2):
-#     solution = solver.solve(easy_lp_problem2,Config(opt_max_cnt=100,opt_tolerance=1e-20))
-#     print (solution)
-#     assert solution.obj_value <= 9.983
-#     # assert (solution.x == np.array([0.5,0.5,0.5,0.5])).all()
-
-
-def test_benchmark(solver,benchmark_problem):
-    solution = solver.solve(benchmark_problem,Config(opt_max_cnt=100,opt_tolerance=1e-20,eq_constraint_tolerance=1e-8))
+def test_basic(basic_solver,easy_lp_problem):
+    solution = basic_solver.solve(easy_lp_problem,Config(device="cpu",opt_tolerance=1e-5))
     print (solution)
-    # assert solution.obj_value <= 9.983
-    # assert (solution.x == np.array([0.5,0.5,0.5,0.5])).all()
+    print (solution.x)
+    # assert solution.obj_value == 55
+    assert (solution.x == np.array([0.5,0.5,0.5,0.5])).all()
 
-# def test_scale(easy_lp_problem):
-#     print ("before.......")
-#     print (easy_lp_problem.le.A)
-#     print (easy_lp_problem.le.b)
-#     print (easy_lp_problem.obj.c)
 
-#     scale = Scaling()
-#     easy_lp_problem,_ = scale(easy_lp_problem,None,Config())
+# def test_bad_lp_problem(basic_solver,bad_eq_lp_problem):
+#     with pytest.raises(EqConstraitConflict):
+#         basic_solver.solve(bad_eq_lp_problem,Config())
 
-#     print ("after.......")
-#     print (easy_lp_problem.le.A)
-#     print (easy_lp_problem.le.b)
-#     print (easy_lp_problem.obj.c)
+
+def test_bad_eq_problem(basic_solver,bad_le_lp_problem):
+    with pytest.raises(LeConstraitConflict):
+        basic_solver.solve(bad_le_lp_problem,Config())
+
+
+def test_random_benchmark(basic_solver,random_benchmark_problem):
+    solution = basic_solver.solve(random_benchmark_problem,Config(device="cpu",opt_tolerance=1e-8))
+    print (solution)
+    13.470434285878028
+    assert solution.obj_value <= 13.470434285878028
+
+
+def test_benchmark(basic_solver,benchmark_problem):
+    solution = basic_solver.solve(benchmark_problem,Config(device="cpu",opt_tolerance=1e-8))
+    print (solution)
+    assert solution.obj_value <= 5501.846005
 

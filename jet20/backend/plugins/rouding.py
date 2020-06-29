@@ -18,7 +18,7 @@ class Rounding(Plugin):
         for i in range(config.rouding_precision,16):
             _x = round_(x,i)
 
-            if p.eq and not p.eq.validate(_x,config.eq_constraint_tolerance):
+            if p.eq and not p.eq.validate(_x,config.opt_constraint_tolerance):
                 continue
 
             if p.le and not p.le.validate(_x):
