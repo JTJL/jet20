@@ -1,0 +1,4 @@
+
+
+LINEAR = "linear"
+QUADRATIC = "quadratic"
