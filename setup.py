@@ -12,9 +12,9 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [ ]
 
-setup_requirements = ['pytest-runner', 'torch>=1.5.0']
+setup_requirements = ['pytest-runner', 'torch>=1.5.0', 'scipy']
 
-test_requirements = ['pytest>=3', ]
+test_requirements = ['pytest>=3', 'cvxpy','cvxopt']
 
 setup(
     author="ioriiod0",

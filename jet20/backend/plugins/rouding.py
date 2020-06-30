@@ -26,11 +26,11 @@ class Rounding(Plugin):
             
             new_value = p.obj(_x) 
             if new_value > old_value:
-                logger.warn("objective get worse,before rouding: %s, after rouding:%s",old_value.item(),new_value.item())
+                logger.warning("objective get worse,before rouding: %s, after rouding:%s",old_value.item(),new_value.item())
 
             return p,_x
         
-        logger.warn("rouding faild.")
+        logger.warning("rouding faild.")
         return p,x
 
             

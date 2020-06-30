@@ -16,7 +16,7 @@ Jet20
 
 
 
-Python Boilerplate contains all the boilerplate you need to create a Python package.
+GPU Powered LP & QP solver.
 
 
 * Free software: MIT license

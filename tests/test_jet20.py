@@ -23,4 +23,10 @@ def test_basic():
     solution = p.solve()
     print (solution)
 
+    assert solution.obj_value == 5.5
+    assert (solution.x == np.array([0.5,0.5,0.5,0.5])).all()
+
+
+
+
 
