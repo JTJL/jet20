@@ -6,7 +6,7 @@ from jet20.frontend.const import *
 
 
 def jet20_default_backend_func(problem,config=None,x=None):
-    eps = np.finfo(np.float64).eps
+    eps = np.finfo(np.float32).eps
     config = config or Config()
 
     s = Solver()

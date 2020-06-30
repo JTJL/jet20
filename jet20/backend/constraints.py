@@ -75,7 +75,7 @@ class LinearEqConstraints(LinearConstraints):
     def __init__(self,A,b):
         super(LinearEqConstraints,self).__init__(A,b)
         
-    def validate(self,x,tolerance=0.0):
+    def validate(self,x,tolerance=1e-8):
         x = torch.abs(self(x))
         neq = x > tolerance
         return neq.float().sum() == 0
