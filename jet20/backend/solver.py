@@ -113,14 +113,14 @@ class Solver(object):
         start = time.time()
         p.float()
         x = x.float()
-        x,obj_value,status = solve(p,x,config,fast=True)
+        x,_,status = solve(p,x,config,fast=True)
         logger.debug("fast mode, time used:%s",time.time()-start)
 
         if status == SUB_OPTIMAL:
             start = time.time()
             p.double()
             x = x.double()
-            x,obj_value,status = solve(p,x,config,fast=False)
+            x,_,status = solve(p,x,config,fast=False)
             logger.debug("prcision mode, time used:%s",time.time()-start)
 
         for post in self.posts:
@@ -128,7 +128,7 @@ class Solver(object):
             p,x = post.postprocess(p,x,config)
             logger.debug("postprocessing name:%s, time used:%s",post.name(),time.time()-start)
 
-        return p.build_solution(x,obj_value,status)
+        return p.build_solution(x,p.obj(x),status)
 
 
     def register_pres(self,*pres):

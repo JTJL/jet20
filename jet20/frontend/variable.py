@@ -6,7 +6,7 @@ class Variable(Expression):
 
     """
     def __init__(self, index: int, name: str):
-        Expression.__init__(self, None, index)
+        Expression.__init__(self, None, var_index=index)
         self._index: int = index
         self._name: str = name
         # TODO: upper/lower bound, constraint_type([0,1], integer, float...)

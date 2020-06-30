@@ -1,7 +1,7 @@
 from jet20.frontend.expression import Expression
 from jet20.frontend.variable import Variable
 from jet20.frontend.const import *
-from jet20.backend import solve_func
+from jet20.frontend.backends import jet20_default_backend_func
 from typing import List, Union, Callable
 from functools import wraps
 import numpy as np
@@ -50,20 +50,21 @@ def canonicalize(add_expr):
     def transform(self, expr: Expression):
         if isinstance(expr, Expression):
             op_pairs = {OP_GT: OP_LT, OP_GE: OP_LE}  # {">":"<", ">=":"<="}
-            _expr = expr
-            if expr.op in op_pairs:
-                _expr = -expr.with_op(op_pairs[expr.op])
-        return add_expr(self, _expr)
+            op = expr.op
+            if op in op_pairs:
+                expr = (-(expr.with_op(''))).with_op(op_pairs[op])
+        return add_expr(self, expr)
 
     return transform
 
 
 class Problem(object):
     __default_solvers__ = {
-        "jet20.backend": solve_func
+        "jet20.backend": jet20_default_backend_func,
     }
 
-    def __init__(self):
+    def __init__(self,name: str = ""):
+        self.name = name
         self._object: Union[Expression, None] = None
         self._constraints: List[Expression] = []
         self._variables: List[Variable] = []
@@ -108,7 +109,7 @@ class Problem(object):
         return _vars
 
     @assert_not_constraint
-    def min(self, expr: Expression):
+    def minimize(self, expr: Expression):
         """Add the object math expression of this problem for minimizing it's value.
         Args:
             expr: A instance of Expression.
@@ -119,7 +120,7 @@ class Problem(object):
         self._object = expr
 
     @assert_not_constraint
-    def max(self, expr: Expression):
+    def maximize(self, expr: Expression):
         """Add the object math expression of this problem for maximizing it's value.
         Args:
             expr: A instance of Expression.
@@ -150,7 +151,7 @@ class Problem(object):
         self._constraints += [expr.expand(self.variables_count + 1)]
 
     @property
-    def canonical(self) -> (np.ndarray, list):
+    def canonical(self):
         """Return the canonical form of this problem.
         Returns: (object express matrix, list of constraint tuples).
          [[1. 0.  0.  0. ]
@@ -163,11 +164,11 @@ class Problem(object):
         """
         _obj = self._object.core_mat  # TODO: 是否要去掉const
         _constraints = np.stack([con.linear_complete_vector[:-1] for con in self._constraints])  # cut const off
-        _ops = [con.op for con in self._constraints]
-        _consts = [-con.const for con in self._constraints]
+        _ops = np.array([con.op for con in self._constraints])
+        _consts = np.array([-con.const for con in self._constraints])
         return _obj, _constraints, _ops, _consts
 
-    def solve(self, name: str, *args, **kwargs):  # TODO: return type hint
+    def solve(self, name: str = "jet20.backend", *args, **kwargs):  # TODO: return type hint
         """Calling one of the registered solvers to solve problem.
         Args:
             name: One of the registered solvers's name.
@@ -177,7 +178,7 @@ class Problem(object):
         Returns:
 
         """
-        return self._solver[name](self.canonical, *args, **kwargs)
+        return self._solver[name](self, *args, **kwargs)
 
     def reg_solver(self, name: str, func: Callable):  # TODO:可否约束func签名
         """Register a solver, it will be called to solve the problem later.

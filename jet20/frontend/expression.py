@@ -109,7 +109,7 @@ class Expression(object):
 
     @property
     def is_constraint(self) -> bool:
-        return False if self.op == '' else True
+        return self.op != ''
 
     @property
     def shape(self) -> tuple:
@@ -276,8 +276,11 @@ class Expression(object):
         Returns:
             A new core matrix has been expanded to n*n dim
         """
-        if n <= self.dim:
+        if n < self.dim:
             raise ValueError("expand dim less than the current is not allowed")
+        if n == self.dim:
+            return self
+
         base = np.zeros((n, n))
         _q_mat = self._quadratic_matrix
         base[:_q_mat.shape[0], :_q_mat.shape[1]] = _q_mat  # cover quadratic paras back
