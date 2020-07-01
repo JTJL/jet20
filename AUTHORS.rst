@@ -5,7 +5,8 @@ Credits
 Development Lead
 ----------------
 
-* ioriiod0 <ioriiod0@gmail.com>
+* ioriiod0 <gaolei@watermirror.ai>
+* kingydw <yudongwu@watermirror.ai>
 
 Contributors
 ------------

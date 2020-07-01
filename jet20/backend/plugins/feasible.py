@@ -39,7 +39,7 @@ class EnsureEqFeasible(Plugin):
             return p,self.find_feasible(p.eq,config)
 
         if not p.eq.validate(x):
-            logger.warn("x is not a feasible solution, eq constraints not satisfied")
+            logger.warning("x is not a feasible solution, eq constraints not satisfied")
             return p,self.find_feasible(p.eq,config)
         
         return p,x
@@ -108,7 +108,7 @@ class EnsureLeFeasible(Plugin):
             return p,self.find_feasible(p,x,config)
 
         if not p.le.validate(x):
-            logger.warn("x is not a feasible solution, le constraints not satisfied")
+            logger.warning("x is not a feasible solution, le constraints not satisfied")
             return p,self.find_feasible(p,x,config)
 
         return p,x
