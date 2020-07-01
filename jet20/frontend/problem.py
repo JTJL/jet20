@@ -92,7 +92,7 @@ class Problem(object):
         self._variables += [_var]
         return _var
 
-    def variables(self, symbols: str):
+    def variables(self, symbols: str, lb:Union[None,List[float],float]=None, ub:Union[None,List[float],float]=None):
         """Adding a batch variables.
         Example: variables("x y z")
         Args:

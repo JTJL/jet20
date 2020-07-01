@@ -8,27 +8,6 @@ from jet20.frontend.const import *
 from functools import wraps
 
 
-def _cast_other(binary_op):
-    """
-    """
-
-    @wraps(binary_op)
-    def cast_op(self, other: Union[Real, 'Expression']):
-        """
-        """
-        if type(other) in (int, float):
-            other = self.cast_const(other)
-        # elif isinstance(other, Expression):
-        #     other = self.cast_to_const(other)
-        else:
-            raise NotImplementedError(
-                f"unsupported operand type(s) for *: {type(self).__name__} and {type(other).__name__}")
-
-        return binary_op(self, other)
-
-    return cast_op
-
-
 def constraint_check(binary_op):
     """
     """
