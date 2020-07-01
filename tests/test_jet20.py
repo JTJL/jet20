@@ -46,6 +46,29 @@ def test_basic2():
     assert (solution.x == np.array([0.5,0.5,0.5,0.5])).all()
 
 
+def test_basic3():
+    A1 = np.array([ [1,0,0,1],
+                    [0,1,0,1]  ])
+    b1 = 1
 
+
+    A2 = np.array([ [1,1,0,0],
+                    [0,1,1,0]  ])
+    b2 = np.array([1,1])
+    c = np.array([2,3,1,5])
+
+
+    p = Problem("test")
+    xs = p.variables("x1,x2,x3,x4",lb=0)
+    
+    p.minimize(c @ xs)
+    p.constraint(A1 @ xs >= b1,
+                A2 @ xs == b2)
+
+    solution = p.solve()
+    print (solution)
+
+    assert solution.obj_value == 5.5
+    assert (solution.x == np.array([0.5,0.5,0.5,0.5])).all()
 
 
