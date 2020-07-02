@@ -104,7 +104,7 @@ def test_qp_basic2():
     p = Problem("test")
     xs = p.variables("x1,x2,x3,x4",lb=0)
 
-    p.minimize(p.quad(Q,xs) + c @ xs + 2.0)
+    p.minimize(jet20.quad(Q,xs) + c @ xs + 2.0)
     p.constraint(A1 @ xs >= b1,
                 A2 @ xs == b2)
 
