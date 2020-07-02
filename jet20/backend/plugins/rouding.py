@@ -24,11 +24,13 @@ class Rounding(Plugin):
             if p.le and not p.le.validate(_x):
                 continue
             
-            new_value = p.obj(_x) 
-            if new_value > old_value:
-                logger.warning("objective get worse,before rouding: %s, after rouding:%s",old_value.item(),new_value.item())
+            new_value = p.obj(_x)
 
-            return p,_x
+            if new_value <= old_value:
+                return p,_x
+            elif config.force_rouding:
+                logger.warning("objective get worse,before rouding: %s, after rouding:%s",old_value.item(),new_value.item())
+                return p,_x
         
         logger.warning("rouding faild.")
         return p,x

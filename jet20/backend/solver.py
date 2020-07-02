@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class Solution(object):
     def __init__(self,x,_vars,obj_value,status):
-        self.status = None
+        self.status = status
         self.obj_value = obj_value
         self.vars = _vars
         self.x = x
@@ -39,7 +39,10 @@ class Problem(object):
 
         def convert(x):
             if x is not None:
-                return torch.tensor(x,dtype=dtype,device=device)
+                if isinstance(x,torch.Tensor):
+                    return x.type(dtype).to(device)
+                else:
+                    return torch.tensor(x,dtype=dtype,device=device)
             else:
                 return None
 
