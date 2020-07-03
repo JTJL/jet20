@@ -217,7 +217,7 @@ def random_benchmark_problem():
 
 
 def test_basic(basic_solver,easy_lp_problem):
-    solution = basic_solver.solve(easy_lp_problem,Config(device="cpu",opt_tolerance=1e-5))
+    solution = basic_solver.solve(easy_lp_problem,Config(device="cpu",opt_tolerance=1e-5,force_rouding=True))
     print (solution)
     print (solution.x)
     # assert solution.obj_value == 55
@@ -235,13 +235,13 @@ def test_bad_eq_problem(basic_solver,bad_le_lp_problem):
 
 
 def test_random_benchmark(basic_solver,random_benchmark_problem):
-    solution = basic_solver.solve(random_benchmark_problem,Config(device="cpu",opt_tolerance=1e-8))
+    solution = basic_solver.solve(random_benchmark_problem,Config(device="cpu",opt_tolerance=1e-8,force_rouding=True))
     print (solution)
     assert solution.obj_value <= 13.4704342859
 
 
 def test_benchmark(basic_solver,benchmark_problem):
-    solution = basic_solver.solve(benchmark_problem,Config(device="cpu",opt_tolerance=1e-8))
+    solution = basic_solver.solve(benchmark_problem,Config(device="cpu",opt_tolerance=1e-8,force_rouding=True))
     print (solution)
     assert solution.obj_value <= 5501.846005
 

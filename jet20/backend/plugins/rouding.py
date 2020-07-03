@@ -29,7 +29,7 @@ class Rounding(Plugin):
             if new_value <= old_value:
                 return p,_x
             elif config.force_rouding:
-                logger.warning("objective get worse,before rouding: %s, after rouding:%s",old_value.item(),new_value.item())
+                logger.warning("objective get worse,before rouding: %s, after rouding:%s, p:%s",old_value.item(),new_value.item(),i)
                 return p,_x
         
         logger.warning("rouding faild.")
