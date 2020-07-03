@@ -36,14 +36,26 @@ Jet20 is a GPU Powered LP & QP solver. It provides three main features:
 Performance
 -----------
 
-Benchmark on random generated LP problems with different size and density(non-zeros).
+Benchmark on random generated LP problems with different size and density(ration of non-zeros).
 
         * Cplex running on Intel i9/2.3GHz/8cores while Jet20 running on single Nvidia 2080Ti.
         * Problem size N means problem with N varibles and N constraits.
 
 .. image:: http://markdown-1254266567.cosgz.myqcloud.com/img/20200703193107.png
+        :width: 300
+        :height: 200
+.. image:: http://markdown-1254266567.cosgz.myqcloud.com/img/20200703193213.png
+        :width: 300
+        :height: 200
 .. image:: http://markdown-1254266567.cosgz.myqcloud.com/img/20200703193153.png
+        :width: 300
+        :height: 200
+.. image:: http://markdown-1254266567.cosgz.myqcloud.com/img/20200703193140.png
+        :width: 300
+        :height: 200
 .. image:: http://markdown-1254266567.cosgz.myqcloud.com/img/20200703193124.png
+        :width: 300
+        :height: 200
 
 Examples
 --------
