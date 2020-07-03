@@ -1,6 +1,10 @@
-=====
-Jet20
-=====
+============
+|logo| Jet20
+============
+
+.. |logo| image:: imgs/jet20.png
+        :width: 80
+        :height: 80
 
 
 .. image:: https://img.shields.io/pypi/v/jet20.svg
@@ -17,8 +21,8 @@ Jet20
 
 Jet20 is a GPU Powered LP & QP solver. It provides three main features:
 
-- a frontend for modeling Lp & QP problem easily
-- a GPU powered backend which impliments primal dual interior point method
+- A frontend for modeling Lp & QP problem easily
+- A GPU powered backend which impliments primal dual interior point method, written by pytorch
 - Modular design, easy to extend
 
 .. note::
@@ -34,12 +38,12 @@ Performance
 
 Benchmark on random generated LP problems with different size and density(non-zeros).
 
-        * Cplex running on Inter i9 2.3GHz 8 cores and Jet20 running on one Nvidia 2080Ti.
+        * Cplex running on Intel i9/2.3GHz/8cores while Jet20 running on single Nvidia 2080Ti.
         * Problem size N means problem with N varibles and N constraits.
 
-.. image:: /imgs/Density0.1.jpg
-.. image:: /imgs/Density0.3.jpg
-.. image:: /imgs/Density0.5.jpg
+.. image:: http://markdown-1254266567.cosgz.myqcloud.com/img/20200703193107.png
+.. image:: http://markdown-1254266567.cosgz.myqcloud.com/img/20200703193153.png
+.. image:: http://markdown-1254266567.cosgz.myqcloud.com/img/20200703193124.png
 
 Examples
 --------
