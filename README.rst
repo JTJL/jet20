@@ -39,7 +39,7 @@ Performance
 Benchmark on random generated LP problems with different size and density(ration of non-zeros).
 
         * Cplex running on Intel i9/2.3GHz/8cores while Jet20 running on single Nvidia 2080Ti.
-        * Problem size N means problem with N varibles and N constraits.
+        * Problem size N means N varibles and N constraits.
 
 .. image:: http://markdown-1254266567.cosgz.myqcloud.com/img/20200703193107.png
         :width: 300
