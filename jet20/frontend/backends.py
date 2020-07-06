@@ -1,13 +1,52 @@
 import numpy as np
+import torch
+
 from jet20.backend import Config,Solver,EnsureEqFeasible,EnsureLeFeasible,Rounding
 from jet20.backend import Problem as P
 from jet20.frontend.const import *
 
 
 
-def jet20_default_backend_func(problem,config=None,x=None):
+def jet20_default_backend_func(problem,x=None,opt_tolerance=1e-3,
+                                opt_u = 10.0,
+                                opt_alpha = 0.1,
+                                opt_beta = 0.5,
+                                opt_constraint_tolerance = 1e-5,
+                                opt_verbose = False,
+                                rouding_precision = 3,
+                                force_rouding = False,
+                                device ="cuda"):
+
+    """
+    This function is a wrapper of jet20 backend.
+
+    :param problem: the problem instance.
+    :type problem: class:`jet20.Problem`.
+    :param x: initial solution of the problem
+    :type x: list,numpy.ndarray
+    :param opt_u: hyperparameters for interior point method
+    :type opt_u: float
+    :param opt_alpha: hyperparameters for line search
+    :type opt_alpha: float
+    :param opt_beta: hyperparameters for line search
+    :type opt_beta: float
+    :param opt_tolerance: objective value tolerance
+    :type opt_tolerance: float
+    :param opt_constraint_tolerance: feasibility tolerance
+    :type opt_constraint_tolerance: float
+    :param rouding_precision: rouding precision
+    :type rouding_precision: int
+    :param force_rouding: whether force rounding
+    :type rouding_precision: bool
+    :return: solution of the problem
+    :rtype: Solution
+    """
+
     eps = np.finfo(np.float32).eps
-    config = config or Config()
+    config = Config(opt_tolerance=opt_tolerance,opt_u=opt_u,opt_alpha=opt_alpha,
+                opt_beta=opt_beta,opt_constraint_tolerance=opt_constraint_tolerance,
+                opt_verbose=opt_verbose,rouding_precision=rouding_precision,
+                force_rouding=force_rouding,device=device)
 
     s = Solver()
     s.register_pres(EnsureEqFeasible(),EnsureLeFeasible())
@@ -48,7 +87,9 @@ def jet20_default_backend_func(problem,config=None,x=None):
     else:
         le = None
  
-    p = P.from_numpy(var_names,obj,le,eq)
+    p = P.from_numpy(var_names,obj,le,eq,dtype=torch.float32,device=config.device)
+    if x is not None:
+        x = torch.tensor(x,dtype=torch.float32,device=config.device)
     
     return s.solve(p,config,x)
 

@@ -135,6 +135,10 @@ class Solver(object):
             x,_,status = solve(p,x,config,fast=False)
             logger.debug("precision mode, time used:%s",time.time()-start)
 
+
+        if status != OPTIMAL:
+            logger.warning("optimal not found, status:%s",status)
+
         for post in self.posts:
             start = time.time()
             p,x = post.postprocess(p,x,config)

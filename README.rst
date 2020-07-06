@@ -29,7 +29,7 @@ Jet20 is a GPU Powered LP & QP solver. It provides three main features:
 
         * This is an alpha release and the project is still under heavily development. 
         * CrossOver is not supported currently.
-        * There still are many rooms for memory usage and performance.
+        * There still are a lot of rooms for improving memory usage and performance.
         * PRs and issues are welcome.
 
 
@@ -57,20 +57,9 @@ Benchmark on random generated LP problems with different size and density(ratio 
         :width: 300
         :height: 200
 
-Examples
---------
 
-* TODO
-
-Road Map
---------
-
-- [ ] sparse tensor support
-- [ ] crossover support
-- [ ] more preprocessing plugins..
-
-Install
---------
+Installation
+------------
 
 To install Jet20, run this command in your terminal:
 
@@ -88,6 +77,96 @@ you through the process.
 
 * Free software: MIT license
 * Documentation: https://jet20.readthedocs.io.
+
+
+Examples
+--------
+
+* simple LP problem
+
+.. code-block:: python
+
+        p = Problem("test")
+        x1,x2,x3,x4 = p.variables("x1,x2,x3,x4",lb=0)
+
+        p.minimize(2 * x1 + 3 * x2 + x3 + 5 * x4)
+
+        p.constraint(x1 + x4 >= 1,
+                x2 + x4 >= 1,
+                x1 + x2 == 1,
+                x2 + x3 == 1)
+
+        solution = p.solve()
+
+* simple LP problem, Matrix Form
+
+.. code-block:: python
+
+        A1 = np.array([ [1,0,0,1],
+                    [0,1,0,1]  ])
+        b1 = 1
+        A2 = np.array([ [1,1,0,0],
+                        [0,1,1,0]  ])
+        b2 = np.array([1,1])
+        c = np.array([2,3,1,5])
+
+
+        p = Problem("test")
+        xs = p.variables("x1,x2,x3,x4",lb=0)
+        
+        p.minimize(c @ xs)
+        p.constraint(A1 @ xs >= b1,
+                        A2 @ xs == b2)
+
+        solution = p.solve()
+        print (solution)
+
+* simple QP problem
+
+.. code-block:: python
+
+    p = Problem("test")
+    x1,x2,x3,x4 = p.variables("x1,x2,x3,x4",lb=0)
+
+    p.minimize(2*x1**2 + 3*x2**2 + x3**2 + 5*x4**2 + x1*x2 + 2*x2*x3 + 4*x1*x4)
+    p.constraint(x1 + x4 >= 1,
+                x2 + x4 >= 1,
+                x1 + x2 == 1,
+                x2 + x3 == 1)
+
+    solution = p.solve()
+    print (solution)
+
+
+* simple QP problem, Matrix Form
+
+.. code-block:: python
+
+    A1 = np.array([ [1,0,0,1],
+                    [0,1,0,1]  ])
+    b1 = 1
+    A2 = np.array([ [1,1,0,0],
+                    [0,1,1,0]  ])
+    b2 = np.array([1,1])
+    c = np.array([2,3,1,5])
+    Q = np.random.randn(4,4)
+    Q = Q.T @ Q
+
+
+    p = Problem("test")
+    xs = p.variables("x1,x2,x3,x4",lb=0)
+    p.minimize(jet20.quad(Q,xs) + c @ xs)
+    p.constraint(A1 @ xs >= b1,
+                A2 @ xs == b2)
+
+
+Road Map
+--------
+
+- [ ] sparse tensor support
+- [ ] crossover support
+- [ ] more preprocessing plugins..
+
 
 
 Credits
