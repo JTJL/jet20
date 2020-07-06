@@ -105,8 +105,8 @@ class Problem(object):
         Returns:
             Variables, and their name is attached with per symbol
         """
-        if lb is not (None, list, float) or ub is not (None, list, float):
-            raise TypeError("bounds must be list of floats, float or None")
+        # if type(lb) not in (None, list, float) or type(ub) not in (None, list, float):
+        #     raise TypeError("bounds must be list of floats, float or None")
 
         _var_names = list(filter(None, re.split("[ ,;]", symbols)))
 
@@ -186,7 +186,7 @@ class Problem(object):
         """
         _obj = self._subject.core_mat  # TODO: 是否要去掉const
         exprs, ops = list(zip(*[con.canonicalize() for con in self._constraints]))  # unzip constraints, ops
-        _constraints = np.stack([con.linear_complete_vector[:-1] for con in exprs])  # cut const off
+        _constraints = np.stack([con.expand_linear_vector(len(self._variables)+1)[:-1] for con in exprs])  # cut const off
         _ops = np.array(ops)
         _consts = np.array([-con.const for con in exprs])
         return _obj, _constraints, _ops, _consts

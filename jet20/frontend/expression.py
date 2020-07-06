@@ -220,14 +220,16 @@ class Expression(object):
         Returns:
             A new np.ndarray expanded base on the input vec
         """
-        if len(vec) >= n:
+        if len(vec) > n:
             raise ValueError("expand to a shorter vector than itself is not allowed")
+        if len(vec) == n:
+            return vec
 
         base = np.zeros(n)
         base[:len(vec)] = vec
         return base
 
-    def _expand_linear_vector(self, n: int) -> np.ndarray:
+    def expand_linear_vector(self, n: int) -> np.ndarray:
         """
 
         Args:
@@ -318,9 +320,9 @@ class Expression(object):
             _other = other.linear_complete_vector
             # align two vectors
             if len(_self) < len(_other):
-                _self = self._expand_linear_vector(len(_other))
+                _self = self.expand_linear_vector(len(_other))
             else:
-                _other = other._expand_linear_vector(len(_self))
+                _other = other.expand_linear_vector(len(_self))
 
             base = np.outer(_self, _other)
             return Expression((base.transpose() + base) / 2)
@@ -402,4 +404,4 @@ class Constraint(object):
         expr = self._lh - self._rh
         # lh > rh => -(lh-rh) < 0
         # lh < rh => lh-rh < 0
-        return -expr, OP_PAIRS[self.op] if self.op in OP_PAIRS else expr, self.op
+        return (-expr, OP_PAIRS[self.op]) if self.op in OP_PAIRS else (expr, self.op)
