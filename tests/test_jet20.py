@@ -70,7 +70,6 @@ def test_lp_basic3():
     assert (solution.x == np.array([0.5,0.5,0.5,0.5])).all()
 
 
-
 def test_qp_basic1():
     p = Problem("test")
     x1,x2,x3,x4 = p.variables("x1,x2,x3,x4",lb=0)
@@ -100,7 +99,6 @@ def test_qp_basic2():
 
     p = Problem("test")
     xs = p.variables("x1,x2,x3,x4",lb=0)
-
     p.minimize(jet20.quad(Q,xs) + c @ xs)
     p.constraint(A1 @ xs >= b1,
                 A2 @ xs == b2)

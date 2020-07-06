@@ -1,4 +1,4 @@
-from typing import TypeVar, Union
+from typing import TypeVar
 from jet20.frontend import Expression
 import numpy as np
 import pytest
@@ -11,8 +11,7 @@ def assert_expression(expr: Expression, expect: tuple):
     assert (expr.linear_complete_vector == expect[1]).all()
     assert (expr.highest_order, expr.shape,
             expr.const,
-            expr.is_constraint,
-            expr.dim, expr.total_variables, expr.op) == expect[2:]
+            expr.dim, expr.total_variables) == expect[2:]
 
 
 # expect: (core_mat,linear_complete_vector,highest_order,shape,const,is_constraint,dim,total_variables,op)
@@ -20,7 +19,7 @@ def assert_expression(expr: Expression, expect: tuple):
                          [
                              (  # expression is a single constant
                                  (np.array([[1]]),),
-                                 (np.array([[1]]), np.array([1]), 0, (1, 1), 1, False, 1, 0, ''),
+                                 (np.array([[1]]), np.array([1]), 0, (1, 1), 1, 1, 0),
                                  None,
                                  ""
                              ),
@@ -38,8 +37,8 @@ def assert_expression(expr: Expression, expect: tuple):
                              ),
                              (  # (x+y)**2
                                  (np.array([[1, 1, 0], [1, 1, 0], [0, 0, 0]]),),
-                                 (np.array([[1, 1, 0], [1, 1, 0], [0, 0, 0]]), np.zeros((3, 1)), 2, (3, 3), 0, False, 3,
-                                  2, ''),
+                                 (np.array([[1, 1, 0], [1, 1, 0], [0, 0, 0]]), np.zeros((3, 1)), 2, (3, 3), 0, 3,
+                                  2),
                                  None,
                                  ""
                              ),
@@ -47,9 +46,7 @@ def assert_expression(expr: Expression, expect: tuple):
                                  (np.array([[0, 0, 0.5], [0, 0, 0.5], [0.5, 0.5, 4]]),),
                                  (
                                      np.array([[0, 0, 0.5], [0, 0, 0.5], [0.5, 0.5, 4]]), np.array([1, 1, 4]), 1,
-                                     (3, 3), 4,
-                                     False, 3,
-                                     2, ''),
+                                     (3, 3), 4, 3, 2),
                                  None,
                                  ""
                              ),
@@ -58,49 +55,32 @@ def assert_expression(expr: Expression, expect: tuple):
                                             [0.5, 1., 1.5, 2., 100.]]),),
                                  (np.array([[0, 0, 0, 0, 0.5], [0, 0, 0, 0, 1.], [0, 0, 0, 0, 1.5], [0, 0, 0, 0, 2.],
                                             [0.5, 1., 1.5, 2., 100.]]), np.array([1, 2, 3, 4, 100]), 1, (5, 5), 100,
-                                  False, 5,
-                                  4, ''),
+                                  5, 4),
                                  None,
                                  ""
                              ),
                              (  # x+y < 2
-                                 (np.array([[0, 0, 0.5], [0, 0, 0.5], [0.5, 0.5, -2]]), '<'),
+                                 (np.array([[0, 0, 0.5], [0, 0, 0.5], [0.5, 0.5, -2]]),),
                                  (
                                      np.array([[0, 0, 0.5], [0, 0, 0.5], [0.5, 0.5, -2]]), np.array([1, 1, -2]), 1,
-                                     (3, 3), -2,
-                                     True, 3,
-                                     2, '<'),
-                                 None,
-                                 ""
-                             ),
-                             (  # x+y >= 2
-                                 (np.array([[0, 0, 0.5], [0, 0, 0.5], [0.5, 0.5, -2]]), '>='),
-                                 (
-                                     np.array([[0, 0, 0.5], [0, 0, 0.5], [0.5, 0.5, -2]]), np.array([1, 1, -2]), 1,
-                                     (3, 3), -2,
-                                     True, 3,
-                                     2, '>='),
+                                     (3, 3), -2, 3, 2),
                                  None,
                                  ""
                              ),
                              (  # 4.4*x, in index, para way
-                                 (None, '', 0, 4.4),
+                                 (None, 0, 4.4),
                                  (
                                      np.array([[0, 2.2], [2.2, 0]]), np.array([4.4, 0]), 1,
-                                     (2, 2), 0,
-                                     False, 2,
-                                     1, ''),
+                                     (2, 2), 0, 2, 1),
                                  None,
                                  ""
                              ),
-                             (  # -3*z < 0, in index, para way
-                                 (None, '<', 2, -3),
+                             (  # -3*z, in index, para way
+                                 (None, 2, -3),
                                  (
                                      np.array([[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, -1.5], [0, 0, -1.5, 0]]),
                                      np.array([0, 0, -3, 0]), 1,
-                                     (4, 4), 0,
-                                     True, 4,
-                                     3, '<'),
+                                     (4, 4), 0, 4, 3),
                                  None,
                                  ""
                              )
@@ -117,18 +97,27 @@ def test_init(input_data: tuple, expect: tuple, expect_exception: _E, except_exc
 
 # input_data: (expr, expand to n)
 @pytest.mark.parametrize("input_data, expect, expect_exception, expect_exception_match", [
-    ((Expression(np.array([[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]])), 5),
-     Expression(np.array([[1, 1, 1, 0, 1], [1, 1, 1, 0, 1], [1, 1, 1, 0, 1], [0, 0, 0, 0, 0], [1, 1, 1, 0, 1]])),
-     None, ""),  # 4*4 => 5*5
-    ((Expression(np.array([[1, 1], [1, 1]])), 6),
-     Expression(np.array(
-         [[1, 0, 0, 0, 0, 1], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0],
-          [1, 0, 0, 0, 0, 1]])),
-     None, ""),  # 2*2 => 6*6
-    ((Expression(np.array([[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]])), 4), None, ValueError,
-     "expand dim less than the current is not allowed"),
-    ((Expression(np.array([[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]])), 3), None, ValueError,
-     "expand dim less than the current is not allowed")
+    (
+        (Expression(np.array([[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]])), 5),
+        Expression(np.array([[1, 1, 1, 0, 1], [1, 1, 1, 0, 1], [1, 1, 1, 0, 1], [0, 0, 0, 0, 0], [1, 1, 1, 0, 1]])),
+        None, ""
+    ),  # 4*4 => 5*5
+    (
+        (Expression(np.array([[1, 1], [1, 1]])), 6),
+        Expression(np.array(
+            [[1, 0, 0, 0, 0, 1], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0],
+             [1, 0, 0, 0, 0, 1]])),
+        None, ""
+    ),  # 2*2 => 6*6
+    (
+        (Expression(np.array([[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]])), 4),
+        Expression(np.array([[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]])), None,
+        ""
+    ),
+    (
+        (Expression(np.array([[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]])), 3), None, ValueError,
+        "expand dim less than the current is not allowed"
+    )
     # ((Expression(np.array([[]])), 3), Expression()),
 ])
 def test_expand(input_data: tuple, expect: Expression, expect_exception: _E, expect_exception_match: str):
@@ -164,7 +153,7 @@ def test_expand(input_data: tuple, expect: Expression, expect_exception: _E, exp
         np.array([1, 0]), None, ""
     ),
     (
-        Expression(None, '', 1, 1),  # y, in index, para way
+        Expression(None, 1, 1),  # y, in index, para way
         np.array([0, 1, 0]), None, ""
     )
     # (Expression(), np.array(), None, "")
@@ -179,12 +168,8 @@ def test_linear_complete_vector(input_data: Expression, expect: np.ndarray, expe
 
 
 @pytest.mark.parametrize("a, b, expect, expect_exception, expect_exception_match", [
-    (  # raise exception
-        Expression(None, '<', 0, 1), Expression(None, '', 1, 1),
-        None, NotImplementedError, "unsupported operate on constraint"
-    ),
     (  # x+y
-        Expression(None, '', 0, 1), Expression(None, '', 1, 1),  # x+y
+        Expression(None, var_index=0, para_val=1), Expression(None, var_index=1, para_val=1),  # x+y
         Expression(np.array([[0, 0, 0.5], [0, 0, 0.5], [0.5, 0.5, 0]])), None, ""
     ),
     # (Expression(),Expression(),Expression(),None,""),
@@ -205,7 +190,6 @@ def test_sub(a: Expression, b: Expression, expect: Expression, expect_exception:
 @pytest.mark.parametrize("a, b, expect, expect_exception, expect_exception_match", [])
 def test_mul(a: Expression, b: Expression, expect: Expression, expect_exception: _E, expect_exception_match: str):
     pass
-
 
 # @pytest.mark.parametrize("a, pow, expect, expect_exception, expect_exception_match", [])
 # def test_pow():

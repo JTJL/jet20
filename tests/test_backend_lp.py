@@ -23,9 +23,8 @@ from jet20.backend import (Solver,EnsureEqFeasible,EnsureLeFeasible,
 
 
 def read_mps_preprocess(filepath):
-    os.system("./emps %s >> tmp.mps" % filepath)
     problem = op()
-    problem.fromfile('tmp.mps')
+    problem.fromfile('%s.mps' % filepath)
     mat_form = problem._inmatrixform(format='dense')
     format = 'dense'
     assert mat_form
@@ -69,8 +68,12 @@ def basic_solver():
 
 @pytest.fixture
 def benchmark_problem():
-    c,G,h,A,b = read_mps_preprocess("cre-a")
+    c,G,h,A,b = read_mps_preprocess("25fv47")
     _vars = [ "x_%s" % i for i in range(c.size) ]
+    print ("====================")
+    print ("752.4339 -10534.601322999999 23390.189822 800.3566000000002 6845.739995")
+    print (c.sum(),G.sum(),h.sum(),A.sum(),b.sum())
+
     return Problem.from_numpy(_vars,(None,c,None),(G,h),(A,b))
 
 
@@ -99,13 +102,13 @@ def easy_lp_problem():
     OBJ_C = np.array([2,3,1,5]) * scale
 
     _vars = [ "x_%s" % i for i in range(4) ]
-    return Problem.from_numpy(_vars,(None,OBJ_C,None),(LE_A,LE_B),(EQ_A,EQ_B),torch.device("cpu"),torch.float32)
+    return Problem.from_numpy(_vars,(None,OBJ_C,None),(LE_A,LE_B),(EQ_A,EQ_B),torch.device("cpu"))
 
 
 
 @pytest.fixture
 def bad_eq_lp_problem():
-    LE_A = -1 * torch.FloatTensor([
+    LE_A = -1 * torch.DoubleTensor([
         [1,0,0,1], # >= 1
         [0,1,0,1], # >= 1
         [1,0,0,0],
@@ -114,16 +117,16 @@ def bad_eq_lp_problem():
         [0,0,0,1],
     ])
 
-    LE_B = -1 * torch.FloatTensor([1,1,0,0,0,0])
+    LE_B = -1 * torch.DoubleTensor([1,1,0,0,0,0])
 
-    EQ_A = torch.FloatTensor([
+    EQ_A = torch.DoubleTensor([
         [1,1,0,0], #==1
         [1,1,0,0], #==2
     ])
 
-    EQ_B = torch.FloatTensor([1,2])
+    EQ_B = torch.DoubleTensor([1,2])
 
-    OBJ_C = torch.FloatTensor([2,3,1,5])
+    OBJ_C = torch.DoubleTensor([2,3,1,5])
 
     eq = LinearEqConstraints(EQ_A,EQ_B)
     le = LinearLeConstraints(LE_A,LE_B)
@@ -135,7 +138,7 @@ def bad_eq_lp_problem():
 
 @pytest.fixture
 def bad_le_lp_problem():
-    LE_A = -1 *torch.FloatTensor([
+    LE_A = -1 *torch.DoubleTensor([
         [-1,-1,0,-1], # <= 0.5
         [1,0,0,1], # >= 1
         [0,1,0,1], # >= 1
@@ -145,19 +148,19 @@ def bad_le_lp_problem():
         [0,0,0,1],
     ])
 
-    LE_B = -1 * torch.FloatTensor([-0.5,1,1,0,0,0,0])
+    LE_B = -1 * torch.DoubleTensor([-0.5,1,1,0,0,0,0])
 
-    EQ_A = torch.FloatTensor([
+    EQ_A = torch.DoubleTensor([
         [1,1,0,0], #==1
         [0,1,1,0], #==2
     ])
 
-    EQ_B = torch.FloatTensor([1,1])
+    EQ_B = torch.DoubleTensor([1,1])
 
-    OBJ_C = torch.FloatTensor([2,3,1,5])
+    OBJ_C = torch.DoubleTensor([2,3,1,5])
     _vars = [ "x_%s" % i for i in range(4) ]
 
-    return Problem.from_numpy(_vars,(None,OBJ_C,None),(LE_A,LE_B),(EQ_A,EQ_B),torch.device("cpu"),torch.float32)
+    return Problem.from_numpy(_vars,(None,OBJ_C,None),(LE_A,LE_B),(EQ_A,EQ_B),torch.device("cpu"))
 
 
 @pytest.fixture
@@ -212,7 +215,7 @@ def random_benchmark_problem():
 
     _vars = [ "x_%s" % i for i in range(N) ]
 
-    p = Problem.from_numpy(_vars,(None,b,None),(A,B),None,torch.device("cpu"),torch.float32)    
+    p = Problem.from_numpy(_vars,(None,b,None),(A,B),None,torch.device("cpu"))    
     return p
 
 
@@ -241,7 +244,7 @@ def test_random_benchmark(basic_solver,random_benchmark_problem):
 
 
 def test_benchmark(basic_solver,benchmark_problem):
-    solution = basic_solver.solve(benchmark_problem,Config(device="cpu",opt_tolerance=1e-8,force_rouding=True))
+    solution = basic_solver.solve(benchmark_problem,Config(device="cpu",opt_tolerance=1e-8,opt_constraint_tolerance=1e-3,force_rouding=True,opt_verbose=True))
     print (solution)
     assert solution.obj_value <= 5501.846005
 

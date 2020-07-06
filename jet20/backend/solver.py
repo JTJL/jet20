@@ -35,7 +35,7 @@ class Problem(object):
 
 
     @classmethod
-    def from_numpy(cls,_vars,obj=None,le=None,eq=None,device=torch.device("cpu"),dtype=torch.float32):
+    def from_numpy(cls,_vars,obj=None,le=None,eq=None,device=torch.device("cpu"),dtype=torch.float64):
 
         def convert(x):
             if x is not None:
@@ -70,31 +70,48 @@ class Problem(object):
 
     def float(self):
         if self.le is not None:
-            self.le.float()
+            le = self.le.float()
+        else:
+            le = None
 
         if self.eq is not None:
-            self.eq.float()
+            eq = self.eq.float()
+        else:
+            eq = None
 
-        self.obj.float()
+        obj = self.obj.float()
+        return self.__class__(self.vars,obj,le,eq)
 
 
     def double(self):
         if self.le is not None:
-            self.le.double()
+            le = self.le.double()
+        else:
+            le = None
 
         if self.eq is not None:
-            self.eq.double()
+            eq = self.eq.double()
+        else:
+            eq = None
 
-        self.obj.double()
+        obj = self.obj.double()
+
+        return self.__class__(self.vars,obj,le,eq)
 
     def to(self,device):
         if self.le is not None:
             self.le.to(device)
+        else:
+            le = None
 
         if self.eq is not None:
             self.eq.to(device)
+        else:
+            eq = None
 
-        self.obj.to(device)
+        obj = self.obj.to(device)
+        return self.__class__(self.vars,obj,le,eq)
+
 
 
     def build_solution(self,x,obj_value,status):
@@ -118,15 +135,15 @@ class Solver(object):
             x = torch.ones(p.n).float().to(config.device)
 
         start = time.time()
-        p.float()
+        p_f32 = p.float()
         x = x.float()
-        x,_,status = solve(p,x,config,fast=True)
+        x,_,status = solve(p_f32,x,config,fast=True)
         logger.debug("fast mode, time used:%s",time.time()-start)
-
+        x = x.double()
+        
         if status == SUB_OPTIMAL:
             start = time.time()
-            p.double()
-            x = x.double()
+            # p = p.double()
             x,_,status = solve(p,x,config,fast=True)
             logger.debug("fast-precision mode, time used:%s",time.time()-start)
 

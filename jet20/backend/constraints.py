@@ -57,18 +57,21 @@ class LinearConstraints(Constraints):
         return self.A.size(0)
 
     def float(self):
-        self.A = self.A.float()
-        self.b = self.b.float()
+        A = self.A.float()
+        b = self.b.float()
+        return self.__class__(A,b)
 
 
     def double(self):
-        self.A = self.A.double()
-        self.b = self.b.double()
+        A = self.A.double()
+        b = self.b.double()
+        return self.__class__(A,b)
 
 
     def to(self,device):
-        self.A = self.A.to(device)
-        self.b = self.b.to(device)
+        A = self.A.to(device)
+        b = self.b.to(device)
+        return self.__class__(A,b)
 
 
 class LinearEqConstraints(LinearConstraints):

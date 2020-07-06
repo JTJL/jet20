@@ -8,43 +8,22 @@ from jet20.frontend.const import *
 from functools import wraps
 
 
-def _cast_other(binary_op):
-    """
-    """
-
-    @wraps(binary_op)
-    def cast_op(self, other: Union[Real, 'Expression']):
-        """
-        """
-        if type(other) in (int, float):
-            other = self.cast_const(other)
-        # elif isinstance(other, Expression):
-        #     other = self.cast_to_const(other)
-        else:
-            raise NotImplementedError(
-                f"unsupported operand type(s) for *: {type(self).__name__} and {type(other).__name__}")
-
-        return binary_op(self, other)
-
-    return cast_op
-
-
-def constraint_check(binary_op):
-    """
-    """
-
-    @wraps(binary_op)
-    def check(self, other):
-        """
-        """
-        if isinstance(self, Expression) and self.is_constraint:
-            raise NotImplementedError("unsupported operate on constraint")
-        if isinstance(other, Expression) and other.is_constraint:
-            raise NotImplementedError("unsupported operate on constraint")
-
-        return binary_op(self, other)
-
-    return check
+# def constraint_check(binary_op):
+#     """
+#     """
+#
+#     @wraps(binary_op)
+#     def check(self, other):
+#         """
+#         """
+#         if isinstance(self, Expression) and self.is_constraint:
+#             raise NotImplementedError("unsupported operate on constraint")
+#         if isinstance(other, Expression) and other.is_constraint:
+#             raise NotImplementedError("unsupported operate on constraint")
+#
+#         return binary_op(self, other)
+#
+#     return check
 
 
 # TODO: 增加一个判断是否为方阵的装饰器?若不是则raise，好像装饰器做不了这个事？我需要的是golang的defer
@@ -64,7 +43,7 @@ class Expression(object):
     for a convenient way to creating expressions.
     """
 
-    def __init__(self, mat: Union[np.ndarray, None], op: str = '', var_index: int = 0, para_val: Real = 1.):
+    def __init__(self, mat: Union[np.ndarray, None], var_index: int = 0, para_val: Real = 1.):  # op: str = '',
         """通过matrix构造
             1. 只支持n元2次齐次或n元2次非齐次方程的表达；
             2. 可表示目标函数和约束函数；
@@ -89,27 +68,19 @@ class Expression(object):
             # j = index
             self._core_mat[var_index + 1, var_index] = self._core_mat[var_index, var_index + 1] = para_val / 2
 
-        self._op = op  # TODO: overloads ==, <, <=, >, >= 的时候实现这里
+        # self._op = op  # TODO: overloads ==, <, <=, >, >= 的时候实现这里
 
     @property
     def core_mat(self) -> np.ndarray:
         return self._core_mat
 
-    @property
-    def op(self) -> str:
-        return self._op
-
     # @op.setter
     # def op(self, op: str):
     #     self._op = op
 
-    def with_op(self, op: str) -> 'Expression':
-        self._op = op
-        return self
-
-    @property
-    def is_constraint(self) -> bool:
-        return self.op != ''
+    # @property
+    # def is_constraint(self) -> bool:
+    #     return self.op != ''
 
     @property
     def shape(self) -> tuple:
@@ -249,14 +220,16 @@ class Expression(object):
         Returns:
             A new np.ndarray expanded base on the input vec
         """
-        if len(vec) >= n:
+        if len(vec) > n:
             raise ValueError("expand to a shorter vector than itself is not allowed")
+        if len(vec) == n:
+            return vec
 
         base = np.zeros(n)
         base[:len(vec)] = vec
         return base
 
-    def _expand_linear_vector(self, n: int) -> np.ndarray:
+    def expand_linear_vector(self, n: int) -> np.ndarray:
         """
 
         Args:
@@ -291,10 +264,14 @@ class Expression(object):
         # cover linear column partial back
         base[:self._linear_col_partial.shape[0], base.shape[1] - 1] = self._linear_col_partial
         base[base.shape[0] - 1, base.shape[1] - 1] = self.const  # cover const back
-        return Expression(base, op=self.op)
+        return Expression(base)
 
-    # @_cast_other
-    @constraint_check
+    def equal(self, other: 'Expression') -> bool:
+        if isinstance(self.core_mat, np.ndarray) and isinstance(other.core_mat, np.ndarray):
+            return np.array_equal(self.core_mat, other.core_mat)
+        return False
+
+    # @constraint_check
     def __add__(self, other: Union[Real, 'Expression']) -> 'Expression':
         if isinstance(other, (int, float)):  # Expression + number
             base = self.core_mat.copy()
@@ -314,23 +291,23 @@ class Expression(object):
             raise NotImplementedError(
                 f"unsupported operand type(s) for +: {type(self).__name__} and {type(other).__name__}")
 
-    @constraint_check
+    # @constraint_check
     def __radd__(self, other: 'Expression') -> 'Expression':
         return self + other
 
-    @constraint_check
+    # @constraint_check
     def __sub__(self, other: 'Expression') -> 'Expression':
         if not isinstance(other, (Expression, int, float)):
             raise NotImplementedError(
                 f"unsupported operand type(s) for -: {type(self).__name__} and {type(other).__name__}")
         return self + -other
 
-    @constraint_check
+    # @constraint_check
     def __rsub__(self, other: 'Expression'):
         return -self + other
 
     # @_cast_other
-    @constraint_check
+    # @constraint_check
     def __mul__(self, other: Union[Real, 'Expression']) -> 'Expression':
         if isinstance(other, (int, float)):  # number * Expression
             return Expression(self.core_mat * other)
@@ -343,9 +320,9 @@ class Expression(object):
             _other = other.linear_complete_vector
             # align two vectors
             if len(_self) < len(_other):
-                _self = self._expand_linear_vector(len(_other))
+                _self = self.expand_linear_vector(len(_other))
             else:
-                _other = other._expand_linear_vector(len(_self))
+                _other = other.expand_linear_vector(len(_self))
 
             base = np.outer(_self, _other)
             return Expression((base.transpose() + base) / 2)
@@ -353,7 +330,7 @@ class Expression(object):
             raise NotImplementedError(
                 f"unsupported operand type(s) for *: {type(self).__name__} and {type(other).__name__}")
 
-    @constraint_check
+    # @constraint_check
     def __rmul__(self, other) -> 'Expression':
         return self * other
 
@@ -364,7 +341,7 @@ class Expression(object):
     # def __rdiv__(self, other) -> 'Expression':
     #     return other / self
 
-    @constraint_check
+    # @constraint_check
     def __pow__(self, power: int, modulo=None) -> 'Expression':
         if self.highest_order > 1:
             raise NotImplementedError("the result will exceed quadratic, which is unsupported now")
@@ -377,34 +354,54 @@ class Expression(object):
     def __neg__(self) -> 'Expression':
         return self * -1
 
-    @constraint_check
-    def __eq__(self, other) -> 'Expression':
-        return (self - other).with_op(OP_EQUAL)
+    # @constraint_check
+    def __eq__(self, other) -> 'Constraint':
+        return Constraint(self, other, OP_EQUAL)
 
-    @constraint_check
-    def __ge__(self, other) -> 'Expression':
-        return (self - other).with_op(OP_GE)
+    # @constraint_check
+    def __ge__(self, other) -> 'Constraint':
+        return Constraint(self, other, OP_GE)
 
-    @constraint_check
-    def __gt__(self, other) -> 'Expression':
-        return (self - other).with_op(OP_GT)
+    # @constraint_check
+    def __gt__(self, other) -> 'Constraint':
+        return Constraint(self, other, OP_GT)
 
-    @constraint_check
-    def __le__(self, other) -> 'Expression':
-        return (self - other).with_op(OP_LE)
+    # @constraint_check
+    def __le__(self, other) -> 'Constraint':
+        return Constraint(self, other, OP_LE)
 
-    @constraint_check
-    def __lt__(self, other) -> 'Expression':
-        return (self - other).with_op(OP_LT)
+    # @constraint_check
+    def __lt__(self, other) -> 'Constraint':
+        return Constraint(self, other, OP_LE)
 
     def __str__(self):
-        return f"{self.core_mat.__str__()} (mat), {self.op} (op)"
+        return f"{self.core_mat.__str__()} (mat)"
 
-    def equal(self, other: 'Expression'):
-        if isinstance(self.core_mat, np.ndarray) and isinstance(other.core_mat, np.ndarray):
-            return np.array_equal(self.core_mat, other.core_mat) and self.op == other.op
-        return False
 
-    @staticmethod
-    def cast_const(n: Real) -> 'Expression':
-        pass
+class Constraint(object):
+    def __init__(self, lh: Union[Expression, float], rh: Union[Expression, float], op: OP):
+        self._lh: Union[Expression, float] = lh
+        self._rh: Union[Expression, float] = rh
+        self._op: OP = op
+
+    @property
+    def lh(self) -> Expression:
+        return self._lh
+
+    @property
+    def rh(self) -> Expression:
+        return self._rh
+
+    @property
+    def op(self) -> str:
+        return self._op
+
+    def with_op(self, op: str) -> 'Constraint':
+        self._op = op
+        return self
+
+    def canonicalize(self) -> (Expression, OP):
+        expr = self._lh - self._rh
+        # lh > rh => -(lh-rh) < 0
+        # lh < rh => lh-rh < 0
+        return (-expr, OP_PAIRS[self.op]) if self.op in OP_PAIRS else (expr, self.op)

@@ -78,19 +78,20 @@ class EnsureLeFeasible(Plugin):
             return x[0]
 
         def should_stop(x,obj_value,dual_gap):
-            return obj_value < 0
+            return obj_value <= 0
 
 
         obj = LambdaObjective(LINEAR,f)
 
         _p = Problem([],obj,le,eq)
-        _p.float()
+        _p_f32 = _p.float()
         x = x.float()
 
-        x,obj_value,status = solve(_p,x,config,fast=True,should_stops=[should_stop])
+        x,obj_value,status = solve(_p_f32,x,config,fast=True,should_stops=[should_stop])
+        x = x.double()
+
         if status == SUB_OPTIMAL and obj_value > 0:
-            _p.double()
-            x = x.double()
+            # _p = _p.double()
             x,obj_value,status = solve(_p,x,config,fast=False,should_stops=[should_stop])
 
 

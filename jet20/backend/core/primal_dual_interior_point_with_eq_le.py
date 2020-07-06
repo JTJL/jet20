@@ -156,12 +156,13 @@ def primal_dual_interior_point_with_eq_le(x,obj,le_cons=None,eq_cons=None,should
             _dir_x,_dir_lambda,_dir_v = solve_kkt_fast(h2,d_f,A,lambda_,f_x,r_dual,r_cent,r_pri)
         else:
             _dir_x,_dir_lambda,_dir_v = solve_kkt(h2,d_f,A,lambda_,f_x,r_dual,r_cent,r_pri,n,m,d)
-        
+
         step = line_search(r_norm,le_cons,(x,lambda_,v),(_dir_x,_dir_lambda,_dir_v), t, norm, alpha=alpha, beta=beta)
 
         x = x + step * _dir_x
         v = v + step * _dir_v
         lambda_ = lambda_ + step * _dir_lambda
+
         
         for ss in should_stop:
             if ss(x,obj_value,dual_gap):

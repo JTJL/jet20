@@ -56,23 +56,23 @@ def random_eq_qp_problem():
 
     _vars = [ "x_%s" % i for i in range(n) ]
 
-    p = Problem.from_numpy(_vars,(0.5 * P.todense(),q,None),None,(A.todense(),u),torch.device("cpu"),torch.float32)
+    p = Problem.from_numpy(_vars,(0.5 * P.todense(),q,None),None,(A.todense(),u),torch.device("cpu"),torch.float64)
     return p
 
 
 @pytest.fixture
 def easy_qp_problem():
-    LE_A = -1 * torch.FloatTensor([[1,1,0,0],
+    LE_A = -1 * torch.DoubleTensor([[1,1,0,0],
                                [0,0,1,1]])
-    LE_B = -1 * torch.FloatTensor([1,1])
+    LE_B = -1 * torch.DoubleTensor([1,1])
 
-    # EQ_A = -1 * torch.FloatTensor([[0,0,0,0],
+    # EQ_A = -1 * torch.DoubleTensor([[0,0,0,0],
     #                            [0,0,1,1]])
-    # EQ_B = -1 * torch.FloatTensor([1,1])
+    # EQ_B = -1 * torch.DoubleTensor([1,1])
 
 
-    OBJ_A = torch.FloatTensor(np.diag([1,1,1,1]))
-    OBJ_B = torch.FloatTensor([1,1,1,1])
+    OBJ_A = torch.DoubleTensor(np.diag([1,1,1,1]))
+    OBJ_B = torch.DoubleTensor([1,1,1,1])
 
     eq = None
     # eq = LinearEqConstraints(EQ_A,EQ_B)
@@ -80,7 +80,7 @@ def easy_qp_problem():
     obj = QuadraticObjective(OBJ_A,OBJ_B)
 
     _vars = [ "x_%s" % i for i in range(4) ]
-    x = torch.ones(4).float()
+    x = torch.ones(4).double()
     print ("obj:",obj(x))
 
     return Problem(_vars,obj,le,eq)
@@ -113,7 +113,7 @@ def random_le_qp_problem():
     # l = - np.inf * np.ones(m)  # u - np.random.rand(m)
     _vars = [ "x_%s" % i for i in range(n) ]
 
-    p = Problem.from_numpy(_vars,(0.5 * P.todense(),q,None),(A.todense(),u),None,torch.device("cpu"),torch.float32)
+    p = Problem.from_numpy(_vars,(0.5 * P.todense(),q,None),(A.todense(),u),None,torch.device("cpu"),torch.float64)
     return p
 
 
@@ -134,7 +134,7 @@ def test_random_eq_qp_problem(basic_solver,random_eq_qp_problem):
 
 
 def test_random_le_qp_problem(basic_solver,random_le_qp_problem):
-    solution = basic_solver.solve(random_le_qp_problem,Config(device="cpu",opt_tolerance=1e-5,opt_constraint_tolerance=1e-5))
+    solution = basic_solver.solve(random_le_qp_problem,Config(device="cpu",opt_tolerance=1e-8,opt_constraint_tolerance=1e-5))
     print (solution)
     assert random_le_qp_problem.le.validate(torch.tensor(solution.x))
-    assert solution.obj_value < 396.79878
+    assert solution.obj_value < 396.798781
