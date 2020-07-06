@@ -161,6 +161,29 @@ def bad_le_lp_problem():
 
 
 @pytest.fixture
+def random_benchmark_problem2():
+    import numpy as np
+    import scipy.sparse as spa
+    n = 100
+    m = 100
+    seed=42
+
+    np.random.seed(seed)
+    c = np.random.randn(n)
+    A = spa.random(m, n, density=0.15,
+                        data_rvs=np.random.randn,
+                        format='csc').todense()
+    v = np.random.randn(n)   # Fictitious solution
+    delta = np.abs(np.random.rand(m))  # To get inequality
+    b = A@v + delta
+
+
+    _vars = [ "x_%s" % i for i in range(n) ]
+
+    p = Problem.from_numpy(_vars,obj=(None,c,None),le=(-A,-b),device=torch.device("cpu"))
+    return p
+
+@pytest.fixture
 def random_benchmark_problem():
     import numpy as np
     np.random.seed(42)
@@ -194,7 +217,7 @@ def random_benchmark_problem():
 
 
 def test_basic(basic_solver,easy_lp_problem):
-    solution = basic_solver.solve(easy_lp_problem,Config(device="cpu",opt_tolerance=1e-5))
+    solution = basic_solver.solve(easy_lp_problem,Config(device="cpu",opt_tolerance=1e-5,force_rouding=True))
     print (solution)
     print (solution.x)
     # assert solution.obj_value == 55
@@ -212,14 +235,13 @@ def test_bad_eq_problem(basic_solver,bad_le_lp_problem):
 
 
 def test_random_benchmark(basic_solver,random_benchmark_problem):
-    solution = basic_solver.solve(random_benchmark_problem,Config(device="cpu",opt_tolerance=1e-8))
+    solution = basic_solver.solve(random_benchmark_problem,Config(device="cpu",opt_tolerance=1e-8,force_rouding=True))
     print (solution)
-    13.470434285878028
-    assert solution.obj_value <= 13.470434285878028
+    assert solution.obj_value <= 13.4704342859
 
 
 def test_benchmark(basic_solver,benchmark_problem):
-    solution = basic_solver.solve(benchmark_problem,Config(device="cpu",opt_tolerance=1e-8))
+    solution = basic_solver.solve(benchmark_problem,Config(device="cpu",opt_tolerance=1e-8,force_rouding=True))
     print (solution)
     assert solution.obj_value <= 5501.846005
 

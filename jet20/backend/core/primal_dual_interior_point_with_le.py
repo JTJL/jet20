@@ -24,14 +24,14 @@ def line_search(r_norm,le,x_l,search_dir,t,norm,alpha=0.1,beta=0.5):
     s = 0.99*s_max
     
     new_x = x + dx * s
-    while not le.validate(new_x):
+    while not le.validate(new_x) and s > 0:
         s = beta * s
         new_x = x + dx * s
     
     new_x = x + dx * s
     new_l = l + dl * s
     
-    while r_norm(new_x,new_l,t) > (1-alpha*s) * norm:
+    while r_norm(new_x,new_l,t) > (1-alpha*s) * norm and s > 0:
         s = beta * s
         new_x = x + dx * s
         new_l = l + dl * s
@@ -77,7 +77,7 @@ def solve_kkt(h2,d_f,lambda_,f_x,r_dual,r_cent,n,m):
     
     
     
-def primal_dual_interior_point_with_le(x,obj,le_cons=None,should_stop=None,u=10.0, tolerance=1e-3, constraint_tolerance=1e-3, alpha=0.1, beta=0.5, fast=False):
+def primal_dual_interior_point_with_le(x,obj,le_cons=None,should_stop=None,u=10.0, tolerance=1e-3, constraint_tolerance=1e-3, alpha=0.1, beta=0.5, fast=False,verbose=False):
     from torch.autograd.functional import jacobian
     from torch.autograd.functional import hessian
     
@@ -126,7 +126,8 @@ def primal_dual_interior_point_with_le(x,obj,le_cons=None,should_stop=None,u=10.
         obj_value = obj(x)
         norm = torch.cat([r_dual,r_cent]).norm(2)
 
-        logger.debug("obj:%s,r_dual:%s,r_cent:%s,norm:%s",obj_value,r_dual.norm(2),r_cent.norm(2),norm)
+        if verbose:
+            logger.info("obj:%s,r_dual:%s,r_cent:%s,norm:%s",obj_value,r_dual.norm(2),r_cent.norm(2),norm)
             
         if r_dual.norm(2) <= constraint_tolerance and dual_gap <= tolerance:
             return x, obj_value, OPTIMAL

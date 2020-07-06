@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class Solution(object):
     def __init__(self,x,_vars,obj_value,status):
-        self.status = None
+        self.status = status
         self.obj_value = obj_value
         self.vars = _vars
         self.x = x
@@ -39,7 +39,10 @@ class Problem(object):
 
         def convert(x):
             if x is not None:
-                return torch.tensor(x,dtype=dtype,device=device)
+                if isinstance(x,torch.Tensor):
+                    return x.type(dtype).to(device)
+                else:
+                    return torch.tensor(x,dtype=dtype,device=device)
             else:
                 return None
 
@@ -52,10 +55,14 @@ class Problem(object):
 
         if le is not None:
             le_A,le_b = [convert(x) for x in le]
+            if le_b.ndim == 2 and le_b.size(0) == 1:
+                le_b = le_b.squeeze(0)
             le = LinearLeConstraints(le_A,le_b)
         
         if eq is not None:
             eq_A,eq_b = [convert(x) for x in eq]
+            if eq_b.ndim == 2 and eq_b.size(0) == 1:
+                eq_b = eq_b.squeeze(0)
             eq = LinearEqConstraints(eq_A,eq_b)
 
         return cls(_vars,obj,le,eq)
@@ -120,8 +127,13 @@ class Solver(object):
             start = time.time()
             p.double()
             x = x.double()
+            x,_,status = solve(p,x,config,fast=True)
+            logger.debug("fast-precision mode, time used:%s",time.time()-start)
+
+        if status == SUB_OPTIMAL:
+            start = time.time()
             x,_,status = solve(p,x,config,fast=False)
-            logger.debug("prcision mode, time used:%s",time.time()-start)
+            logger.debug("precision mode, time used:%s",time.time()-start)
 
         for post in self.posts:
             start = time.time()

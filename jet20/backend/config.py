@@ -7,8 +7,11 @@ class Config(object):
         "opt_alpha" : 0.1,
         "opt_beta" : 0.5,
         "opt_constraint_tolerance": 1e-5,
+        "opt_verbose": False,
         "rouding_precision": 3,
+        "force_rouding": False,
         "device": "cuda",
+
     }
 
     def __init__(self,**kwargs):
