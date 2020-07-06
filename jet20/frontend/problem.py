@@ -26,18 +26,20 @@ import re
 #     return check
 
 
+
 def assert_power(add_expr):
     """
     """
 
     @wraps(add_expr)
-    def check(self, constraint: Constraint):
+    def check(self, *constraints: Constraint):
         """
         """
-        if isinstance(constraint, Constraint) and constraint.canonicalize()[0].highest_order > 1:
-            raise NotImplementedError("power exceed")
+        for c in constraints:
+            if isinstance(c, Constraint) and c.canonicalize()[0].highest_order > 1:
+                raise NotImplementedError("power exceed")
 
-        return add_expr(self, constraint)
+        return add_expr(self, *constraints)
 
     return check
 
@@ -110,20 +112,22 @@ class Problem(object):
 
         _var_names = list(filter(None, re.split("[ ,;]", symbols)))
 
-        if lb is list and len(_var_names) != len(lb):
+        if isinstance(lb,list) and len(_var_names) != len(lb):
             raise ValueError("mismatch length of lower bounds vector and variables vector")
-        if ub is list and len(_var_names) != len(ub):
+        if isinstance(ub,list) and len(_var_names) != len(ub):
             raise ValueError("mismatch length of upper bounds vector and variables vector")
 
-        _vars = []
-        for i, symbol in enumerate(_var_names):
-            _var = Variable(self.variables_count, symbol)
-            self._variables += [_var]
-            _vars += [_var]
-            if lb is not None:
-                self._constraints +=[Constraint(_var, lb, OP_GE)] if lb is float else [Constraint(_var, lb[i])]
-            if ub is not None:
-                self._constraints += [Constraint(_var, ub, OP_LE)] if ub is float else [Constraint(_var, ub[i])]
+        if lb is None or isinstance(lb,(float,int)):
+            lb = [lb] * len(_var_names)
+
+        if ub is None or isinstance(ub,(float,int)):
+            ub = [ub] * len(_var_names)
+
+        _vars = Array()
+        for symbol,lb,ub in zip(_var_names,lb,ub):
+            _var = Variable(self.variables_count, symbol, lb, ub)
+            _vars.append(_var)
+            self._variables.append(_var)
 
         return _vars
 
@@ -184,6 +188,14 @@ class Problem(object):
                   |                  |                  |                 |
                 object          constraits             ops              consts
         """
+
+
+        for _var in self._variables:
+            if _var.lb is not None:
+                self._constraints.append(Constraint(_var, _var.lb, OP_GE))
+            if _var.ub is not None:
+                self._constraints.append(Constraint(_var, _var.ub, OP_LE))
+
         _obj = self._subject.core_mat  # TODO: 是否要去掉const
         exprs, ops = list(zip(*[con.canonicalize() for con in self._constraints]))  # unzip constraints, ops
         _constraints = np.stack([con.expand_linear_vector(len(self._variables)+1)[:-1] for con in exprs])  # cut const off

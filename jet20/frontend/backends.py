@@ -42,7 +42,7 @@ def jet20_default_backend_func(problem,x=None,opt_tolerance=1e-3,
     :rtype: Solution
     """
 
-    eps = np.finfo(np.float32).eps
+    eps = np.finfo(np.float64).eps
     config = Config(opt_tolerance=opt_tolerance,opt_u=opt_u,opt_alpha=opt_alpha,
                 opt_beta=opt_beta,opt_constraint_tolerance=opt_constraint_tolerance,
                 opt_verbose=opt_verbose,rouding_precision=rouding_precision,
@@ -87,9 +87,9 @@ def jet20_default_backend_func(problem,x=None,opt_tolerance=1e-3,
     else:
         le = None
  
-    p = P.from_numpy(var_names,obj,le,eq,dtype=torch.float32,device=config.device)
+    p = P.from_numpy(var_names,obj,le,eq,dtype=torch.float64,device=config.device)
     if x is not None:
-        x = torch.tensor(x,dtype=torch.float32,device=config.device)
+        x = torch.tensor(x,dtype=torch.float64,device=config.device)
     
     return s.solve(p,config,x)
 

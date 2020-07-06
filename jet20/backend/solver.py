@@ -125,7 +125,6 @@ class Solver(object):
         self.posts = []
 
     def solve(self,p,config,x=None):
-
         for pre in self.pres:
             start = time.time()
             p,x = pre.preprocess(p,x,config)
@@ -140,7 +139,7 @@ class Solver(object):
         x,_,status = solve(p_f32,x,config,fast=True)
         logger.debug("fast mode, time used:%s",time.time()-start)
         x = x.double()
-        
+
         if status == SUB_OPTIMAL:
             start = time.time()
             # p = p.double()

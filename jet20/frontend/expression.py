@@ -43,7 +43,7 @@ class Expression(object):
     for a convenient way to creating expressions.
     """
 
-    def __init__(self, mat: Union[np.ndarray, None], var_index: int = 0, para_val: Real = 1.):  # op: str = '',
+    def __init__(self, mat: Union[np.ndarray, None]):  # op: str = '',
         """通过matrix构造
             1. 只支持n元2次齐次或n元2次非齐次方程的表达；
             2. 可表示目标函数和约束函数；
@@ -55,20 +55,11 @@ class Expression(object):
 
             通过参数构造(仅支持构造单一variable的1次幂形式)
         """
-        if mat is not None:
-            if len(mat.shape) is not 2:
-                raise TypeError("mat must be a 2 dimension matrix")
-            self._core_mat = mat  # also called core matrix
-        else:  # construct mat
-            # len=index+1, const占位=len+1, 所以此处+2
-            # TODO: 全0方阵的构造是否有更简单的方法
-            self._core_mat = np.zeros((var_index + 2, var_index + 2))
-            # mat[i,j] = mat[j,i] = para_val/2
-            # i = index + 1
-            # j = index
-            self._core_mat[var_index + 1, var_index] = self._core_mat[var_index, var_index + 1] = para_val / 2
+  
+        if mat.ndim != 2:
+            raise TypeError("mat must be a 2 dimension matrix")
+        self._core_mat = mat  # also called core matrix
 
-        # self._op = op  # TODO: overloads ==, <, <=, >, >= 的时候实现这里
 
     @property
     def core_mat(self) -> np.ndarray:
@@ -116,9 +107,11 @@ class Expression(object):
         Returns: The highest power of Expression
 
         """
-        if not np.array_equal(self._quadratic_matrix, np.zeros(self._quadratic_matrix.shape)):
+        # if not np.array_equal(self._quadratic_matrix, np.zeros(self._quadratic_matrix.shape)):
+        if not (self._quadratic_matrix == 0.0).all():
             return 2
-        elif not np.array_equal(self._linear_partial_sum, np.zeros(self._linear_partial_sum.shape)):
+        # elif not np.array_equal(self._linear_partial_sum, np.zeros(self._linear_partial_sum.shape)):
+        elif not (self._linear_partial_sum == 0.0).all():
             return 1
         else:
             return 0
@@ -377,6 +370,9 @@ class Expression(object):
     def __str__(self):
         return f"{self.core_mat.__str__()} (mat)"
 
+    __repr__ = __str__
+
+
 
 class Constraint(object):
     def __init__(self, lh: Union[Expression, float], rh: Union[Expression, float], op: OP):
@@ -405,3 +401,9 @@ class Constraint(object):
         # lh > rh => -(lh-rh) < 0
         # lh < rh => lh-rh < 0
         return (-expr, OP_PAIRS[self.op]) if self.op in OP_PAIRS else (expr, self.op)
+
+
+
+
+
+
