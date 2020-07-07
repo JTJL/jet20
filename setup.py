@@ -10,23 +10,22 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = [ ]
+requirements = ['torch>=1.5.0','numpy>=1.18.2']
 
-setup_requirements = ['pytest-runner', 'torch>=1.5.0', 'scipy']
+setup_requirements = ['pytest-runner', 'scipy']
 
 test_requirements = ['pytest>=3', 'cvxpy','cvxopt']
 
 setup(
     author="ioriiod0",
     author_email='ioriiod0@gmail.com',
-    python_requires='>=3.5',
+    python_requires='>=3.6',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
@@ -43,6 +42,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/ioriiod0/jet20',
-    version='0.1.0',
+    version='0.5.0',
     zip_safe=False,
 )

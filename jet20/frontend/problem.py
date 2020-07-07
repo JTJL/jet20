@@ -8,24 +8,6 @@ import numpy as np
 import re
 
 
-# TODO:提供with处理exception
-
-# def assert_not_constraint(add_expr):
-#     """
-#     """
-#
-#     @wraps(add_expr)
-#     def check(self, expr: Expression):
-#         """
-#         """
-#         if isinstance(expr, Expression) and expr.is_constraint:
-#             raise NotImplementedError("unsupported put a constraint as object")
-#
-#         return add_expr(self, expr)
-#
-#     return check
-
-
 
 def assert_power(add_expr):
     """
@@ -42,21 +24,6 @@ def assert_power(add_expr):
         return add_expr(self, *constraints)
 
     return check
-
-
-# def canonicalize(add_expr):
-#     """
-#     """
-#
-#     @wraps(add_expr)
-#     def transform(self, expr: Expression):
-#         if isinstance(expr, Expression):
-#             op = expr.op
-#             if op in OP_PAIRS:
-#                 expr = (-(expr.with_op(''))).with_op(OP_PAIRS[op])
-#         return add_expr(self, expr)
-#
-#     return transform
 
 
 class Problem(object):
@@ -203,14 +170,35 @@ class Problem(object):
         _consts = np.array([-con.const for con in exprs])
         return _obj, _constraints, _ops, _consts
 
-    def solve(self, name: str = "jet20.backend", *args, **kwargs):  # TODO: return type hint
-        """Calling one of the registered solvers to solve problem.
-        Args:
-            name: One of the registered solvers's name.
-            *args: Extra args depends on the solver
-            **kwargs: Extra args depends on the solver
+    def solve(self, name: str = "jet20.backend", *args, **kwargs):
+        """Calling one of the registered solvers to solve the problem., jet20.backend will be used by default.
+   
+        :param name: One of the registered solvers's name.
+        :type name: str
+        :param args: Extra args depends on the solver
+        :param kwargs: Extra args depends on the solver
+        :return: solution of the problem depends on the solver
 
-        Returns:
+        for jet20.backend following args can be used:
+
+        :param x: initial solution of the problem
+        :type x: list,numpy.ndarray
+        :param opt_u: hyperparameters for interior point method
+        :type opt_u: float
+        :param opt_alpha: hyperparameters for line search
+        :type opt_alpha: float
+        :param opt_beta: hyperparameters for line search
+        :type opt_beta: float
+        :param opt_tolerance: objective value tolerance
+        :type opt_tolerance: float
+        :param opt_constraint_tolerance: feasibility tolerance
+        :type opt_constraint_tolerance: float
+        :param rouding_precision: rouding precision
+        :type rouding_precision: int
+        :param force_rouding: whether force rounding
+        :type rouding_precision: bool
+        :return: solution of the problem
+        :rtype: Solution
 
         """
         return self._solver[name](self, *args, **kwargs)

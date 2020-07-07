@@ -131,24 +131,28 @@ class Solver(object):
             logger.debug("preprocessing name:%s, time used:%s",pre.name(),time.time()-start)
 
         if x is None:
-            x = torch.ones(p.n).float().to(config.device)
+            x = torch.zeros(p.n).float().to(config.device)
 
         start = time.time()
         p_f32 = p.float()
         x = x.float()
-        x,_,status = solve(p_f32,x,config,fast=True)
+        x,_,status,duals = solve(p_f32,x,config,fast=True)
         logger.debug("fast mode, time used:%s",time.time()-start)
         x = x.double()
+        if isinstance(duals,(tuple,list)):
+            duals = [d.double() for d in duals]
+        else:
+            duals = duals.double()
 
         if status == SUB_OPTIMAL:
             start = time.time()
             # p = p.double()
-            x,_,status = solve(p,x,config,fast=True)
+            x,_,status,duals = solve(p,x,config,fast=True,duals=duals)
             logger.debug("fast-precision mode, time used:%s",time.time()-start)
 
         if status == SUB_OPTIMAL:
             start = time.time()
-            x,_,status = solve(p,x,config,fast=False)
+            x,_,status,duals = solve(p,x,config,fast=False,duals=duals)
             logger.debug("precision mode, time used:%s",time.time()-start)
 
 

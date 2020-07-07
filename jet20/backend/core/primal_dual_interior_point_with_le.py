@@ -77,14 +77,22 @@ def solve_kkt(h2,d_f,lambda_,f_x,r_dual,r_cent,n,m):
     
     
     
-def primal_dual_interior_point_with_le(x,obj,le_cons=None,should_stop=None,u=10.0, tolerance=1e-3, constraint_tolerance=1e-3, alpha=0.1, beta=0.5, fast=False,verbose=False):
+def primal_dual_interior_point_with_le(x,obj,le_cons=None,should_stop=None,u=10.0, tolerance=1e-3, constraint_tolerance=1e-3,
+             alpha=0.1, beta=0.5, fast=False,verbose=False,duals=None):
     from torch.autograd.functional import jacobian
     from torch.autograd.functional import hessian
     
     m = le_cons.size()
     n = x.size(0)
     
-    lambda_ = x.new_ones(m)
+        
+    if duals is None:
+        f_x = le_cons(x)
+        f_x[f_x == 0] = 1e-8
+        lambda_ = - f_x ** -1
+    else:
+        lambda_ = duals
+
     u = 10
     
     def l(x,lambda_):
@@ -130,13 +138,13 @@ def primal_dual_interior_point_with_le(x,obj,le_cons=None,should_stop=None,u=10.
             logger.info("obj:%s,r_dual:%s,r_cent:%s,norm:%s",obj_value,r_dual.norm(2),r_cent.norm(2),norm)
             
         if r_dual.norm(2) <= constraint_tolerance and dual_gap <= tolerance:
-            return x, obj_value, OPTIMAL
+            return x, obj_value, OPTIMAL, lambda_
 
         if not_improving(norm):
-            return x, obj_value, SUB_OPTIMAL
+            return x, obj_value, SUB_OPTIMAL, lambda_
         
         if torch.isnan(obj_value):
-            return x, obj_value, FAIELD
+            return x, obj_value, FAIELD, lambda_
         
         h2 = hessian_(x,lambda_)
         d_f = jacobian_(le_cons,x)
@@ -153,4 +161,4 @@ def primal_dual_interior_point_with_le(x,obj,le_cons=None,should_stop=None,u=10.
         
         for ss in should_stop:
             if ss(x,obj_value,dual_gap):
-                return x, obj_value, USER_STOPPED
+                return x, obj_value, USER_STOPPED, lambda_

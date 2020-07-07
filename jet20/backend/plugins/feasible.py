@@ -87,13 +87,21 @@ class EnsureLeFeasible(Plugin):
         _p_f32 = _p.float()
         x = x.float()
 
-        x,obj_value,status = solve(_p_f32,x,config,fast=True,should_stops=[should_stop])
+        x,obj_value,status,duals = solve(_p_f32,x,config,fast=True,should_stops=[should_stop])
         x = x.double()
+        
+        if isinstance(duals,(tuple,list)):
+            duals = [d.double() for d in duals]
+        else:
+            duals = duals.double()
 
         if status == SUB_OPTIMAL and obj_value > 0:
             # _p = _p.double()
-            x,obj_value,status = solve(_p,x,config,fast=False,should_stops=[should_stop])
+            x,obj_value,status,duals = solve(_p,x,config,fast=True,should_stops=[should_stop],duals=duals)
 
+        if status == SUB_OPTIMAL and obj_value > 0:
+            # _p = _p.double()
+            x,obj_value,status,duals = solve(_p,x,config,fast=False,should_stops=[should_stop],duals=duals)
 
         if status == USER_STOPPED or obj_value <= 0:
             return x[1:]

@@ -88,7 +88,8 @@ def solve_kkt_fast(h2,d_f,A,lambda_,f_x,r_dual,r_cent,r_pri):
     
     return _dir_x,_dir_lambda,_dir_v
 
-def primal_dual_interior_point_with_eq_le(x,obj,le_cons=None,eq_cons=None,should_stop=None,u=10.0, tolerance=1e-3,constraint_tolerance=1e-3, alpha=0.1, beta=0.5, fast=False,verbose=False):
+def primal_dual_interior_point_with_eq_le(x,obj,le_cons=None,eq_cons=None,should_stop=None,u=10.0, tolerance=1e-3,constraint_tolerance=1e-3, 
+    alpha=0.1, beta=0.5, fast=False,verbose=False, duals=None):
     from torch.autograd.functional import jacobian
     from torch.autograd.functional import hessian
     
@@ -96,8 +97,13 @@ def primal_dual_interior_point_with_eq_le(x,obj,le_cons=None,eq_cons=None,should
     n = x.size(0)
     d = eq_cons.size()
     
-    lambda_ = x.new_ones(m)
-    v = x.new_ones(d)
+    if duals is None:
+        f_x = le_cons(x)
+        f_x[f_x == 0] = 1e-8
+        lambda_ = - f_x ** -1
+        v = x.new_ones(d)
+    else:
+        lambda_,v = duals
     
     def l(x,lambda_,v):
         return obj(x) + le_cons(x) @ lambda_ + eq_cons(x) @ v
@@ -142,13 +148,13 @@ def primal_dual_interior_point_with_eq_le(x,obj,le_cons=None,eq_cons=None,should
             logger.info("obj:%s,r_pri:%s,r_dual:%s,dual_gap:%s,norm:%s",obj_value,r_pri.norm(2),r_dual.norm(2),dual_gap,norm)
 
         if r_pri.norm(2) <= constraint_tolerance and r_dual.norm(2) <= constraint_tolerance and dual_gap <= tolerance:
-            return x, obj_value, OPTIMAL
+            return x, obj_value, OPTIMAL, (lambda_,v)
 
         if not_improving(norm):
-            return x, obj_value, SUB_OPTIMAL
+            return x, obj_value, SUB_OPTIMAL, (lambda_,v)
 
         if torch.isnan(obj_value):
-            return x, obj_value, FAIELD
+            return x, obj_value, FAIELD, (lambda_,v)
 
         
         h2 = hessian_(x,lambda_,v)
@@ -170,4 +176,4 @@ def primal_dual_interior_point_with_eq_le(x,obj,le_cons=None,eq_cons=None,should
         
         for ss in should_stop:
             if ss(x,obj_value,dual_gap):
-                return x, obj_value, USER_STOPPED
+                return x, obj_value, USER_STOPPED, (lambda_,v)

@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from jet20.backend import Config,Solver,EnsureEqFeasible,EnsureLeFeasible,Rounding
+from jet20.backend import Config,Solver,EnsureEqFeasible,EnsureLeFeasible,Rounding,Solution,SUB_OPTIMAL,OPTIMAL,FAIELD,USER_STOPPED
 from jet20.backend import Problem as P
 from jet20.frontend.const import *
 

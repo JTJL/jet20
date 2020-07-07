@@ -48,10 +48,9 @@ class Expression(object):
             1. 只支持n元2次齐次或n元2次非齐次方程的表达；
             2. 可表示目标函数和约束函数；
             3. 用一个二维矩阵维护n元2次方程的信息；
-            4. 用额外一个constraint字段维护约束关系；
-            5. matrix从row, col索引0开始表示variable的序号；
-            6. matrix总会带const占位row, column，末行和末列是const占位列；
-            7. 一定是方阵，次对角线相加是表达式中对应i,j变量相乘的系数
+            4. matrix从row, col索引0开始表示variable的序号；
+            5. matrix总会带const占位row, column，末行和末列是const占位列；
+            6. 一定是方阵，次对角线相加是表达式中对应i,j变量相乘的系数
 
             通过参数构造(仅支持构造单一variable的1次幂形式)
         """
