@@ -135,6 +135,9 @@ def primal_dual_interior_point_with_le(x,obj,le_cons=None,should_stop=None,u=10.
         if not_improving(norm):
             return x, obj_value, SUB_OPTIMAL
         
+        if torch.isnan(obj_value):
+            return x, obj_value, FAIELD
+        
         h2 = hessian_(x,lambda_)
         d_f = jacobian_(le_cons,x)
         

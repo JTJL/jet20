@@ -87,10 +87,12 @@ def test_qp_basic1():
 
     solution = p.solve(device="cpu")
     print (solution)
+    assert solution.obj_value == 4.5
 
 
 
 def test_qp_basic2():
+    np.random.seed(42)
     A1 = np.array([ [1,0,0,1],
                     [0,1,0,1]  ])
     b1 = 1
@@ -108,5 +110,11 @@ def test_qp_basic2():
     p.constraints(A1 @ xs >= b1,
                 A2 @ xs == b2)
 
-    solution = p.solve(device="cpu")
+    solution = p.solve(device="cpu",opt_tolerance=1e-8,opt_constraint_tolerance=1e-8,rouding_precision=3)
     print (solution)
+    print (solution.obj_value)
+    print (solution.vars)
+    print (solution.status)
+
+    assert solution.obj_value <= 12.081916655
+

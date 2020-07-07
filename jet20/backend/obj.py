@@ -58,8 +58,12 @@ class LinearObjective(Objective):
     def __init__(self,b,c=None):
         super(LinearObjective,self).__init__()
         self.b = b
-        c = c if c is not None else 0.0
-        self.c = torch.tensor(c,dtype=b.dtype,device=b.device)
+        if c is None:
+            self.c = torch.tensor(0.0,dtype=b.dtype,device=b.device)
+        elif isinstance(c,torch.Tensor):
+            self.c = c
+        else:
+            self.c = torch.tensor(c,dtype=b.dtype,device=b.device)
 
     def __call__(self,x):
         return self.b @ x + self.c
@@ -94,8 +98,12 @@ class QuadraticObjective(Objective):
         self.Q = Q
         self.b = b if b is not None else Q.new_zeros(Q.size(0))
 
-        c = c if c is not None else 0.0
-        self.c = torch.tensor(c,dtype=Q.dtype,device=Q.device)
+        if c is None:
+            self.c = torch.tensor(0.0,dtype=Q.dtype,device=Q.device)
+        elif isinstance(c,torch.Tensor):
+            self.c = c
+        else:
+            self.c = torch.tensor(c,dtype=Q.dtype,device=Q.device)
 
     def __call__(self,x):
         return x @ self.Q @ x + self.b @ x + self.c
