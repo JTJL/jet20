@@ -21,8 +21,8 @@
 
 Jet20 is a GPU Powered LP & QP solver. It provides three main features:
 
-- A frontend for modeling Lp & QP problem easily
-- A backend written by pytorch
+- A frontend for modeling LP & QP problem easily
+- A backend based on pytorch
 - Modular design, easy to extend
 
 .. note::
