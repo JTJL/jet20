@@ -87,9 +87,7 @@ def primal_dual_interior_point_with_le(x,obj,le_cons=None,should_stop=None,u=10.
     
         
     if duals is None:
-        f_x = le_cons(x)
-        f_x[f_x == 0] = 1e-8
-        lambda_ = - f_x ** -1
+        lambda_ = x.new_ones(m)
     else:
         lambda_ = duals
 
