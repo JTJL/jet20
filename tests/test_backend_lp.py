@@ -70,9 +70,6 @@ def basic_solver():
 def benchmark_problem():
     c,G,h,A,b = read_mps_preprocess("25fv47")
     _vars = [ "x_%s" % i for i in range(c.size) ]
-    print ("====================")
-    print ("752.4339 -10534.601322999999 23390.189822 800.3566000000002 6845.739995")
-    print (c.sum(),G.sum(),h.sum(),A.sum(),b.sum())
 
     return Problem.from_numpy(_vars,(None,c,None),(G,h),(A,b))
 
