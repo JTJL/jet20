@@ -49,8 +49,11 @@ def jet20_default_backend_func(problem,x=None,opt_tolerance=1e-3,
                 force_rouding=force_rouding,device=device)
 
     s = Solver()
-    s.register_pres(EnsureEqFeasible(),EnsureLeFeasible())
-    s.register_posts(Rounding(),EnsureEqFeasible(),EnsureLeFeasible())
+    eqf = EnsureEqFeasible()
+    lef = EnsureLeFeasible()
+    r = Rounding()
+    s.register_pres(eqf,lef)
+    s.register_posts(r,eqf,lef)
 
     var_names = [  v.name for v in problem._variables ]
     _obj, _constraints, _ops, _consts = problem.canonical

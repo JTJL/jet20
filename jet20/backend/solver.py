@@ -13,11 +13,12 @@ logger = logging.getLogger(__name__)
   
 
 class Solution(object):
-    def __init__(self,x,_vars,obj_value,status):
+    def __init__(self,x,_vars,obj_value,status,duals):
         self.status = status
         self.obj_value = obj_value
         self.vars = _vars
         self.x = x
+        self.duals = None
 
     def __str__(self):
         return "obj_value: %s vars:%s" % (self.obj_value,self.vars)
@@ -113,10 +114,9 @@ class Problem(object):
         return self.__class__(self.vars,obj,le,eq)
 
 
-
-    def build_solution(self,x,obj_value,status):
+    def build_solution(self,x,obj_value,status,duals):
         _vars = { var: v.item() for var,v in zip(self.vars,x)}
-        return Solution(x.cpu().numpy(),_vars,obj_value.item(),status)
+        return Solution(x.cpu().numpy(),_vars,obj_value.item(),status,duals)
 
 
 class Solver(object):
@@ -164,7 +164,7 @@ class Solver(object):
             p,x = post.postprocess(p,x,config)
             logger.debug("postprocessing name:%s, time used:%s",post.name(),time.time()-start)
 
-        return p.build_solution(x,p.obj(x),status)
+        return p.build_solution(x,p.obj(x),status,duals)
 
 
     def register_pres(self,*pres):
@@ -182,6 +182,4 @@ class Solver(object):
         
         
 
-
-    
 
