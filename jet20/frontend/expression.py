@@ -5,33 +5,9 @@ from numbers import Real
 from typing import Union
 import numpy as np
 from jet20.frontend.const import *
-from functools import wraps
 
-
-# def constraint_check(binary_op):
-#     """
-#     """
-#
-#     @wraps(binary_op)
-#     def check(self, other):
-#         """
-#         """
-#         if isinstance(self, Expression) and self.is_constraint:
-#             raise NotImplementedError("unsupported operate on constraint")
-#         if isinstance(other, Expression) and other.is_constraint:
-#             raise NotImplementedError("unsupported operate on constraint")
-#
-#         return binary_op(self, other)
-#
-#     return check
-
-
-# TODO: 增加一个判断是否为方阵的装饰器?若不是则raise，好像装饰器做不了这个事？我需要的是golang的defer
-
-# TODO: 增加一个通过expand self, other，让shape相同的装饰器？self不会有问题吗？
 
 class Expression(object):
-    # TODO: 补齐这里的注释
     """express a mathematical expression or formula in a square matrix form
     As shown in the following matrix, the
     [[0. 0.  0.  0. ]
@@ -43,21 +19,10 @@ class Expression(object):
     for a convenient way to creating expressions.
     """
 
-    def __init__(self, mat: Union[np.ndarray, None]):  # op: str = '',
-        """通过matrix构造
-            1. 只支持n元2次齐次或n元2次非齐次方程的表达；
-            2. 可表示目标函数和约束函数；
-            3. 用一个二维矩阵维护n元2次方程的信息；
-            4. matrix从row, col索引0开始表示variable的序号；
-            5. matrix总会带const占位row, column，末行和末列是const占位列；
-            6. 一定是方阵，次对角线相加是表达式中对应i,j变量相乘的系数
-
-            通过参数构造(仅支持构造单一variable的1次幂形式)
-        """
-  
+    def __init__(self, mat: Union[np.ndarray, None]):
         if mat.ndim != 2:
             raise TypeError("mat must be a 2 dimension matrix")
-        self._core_mat = mat  # also called core matrix
+        self._core_mat = mat
 
 
     @property
@@ -263,7 +228,6 @@ class Expression(object):
             return np.array_equal(self.core_mat, other.core_mat)
         return False
 
-    # @constraint_check
     def __add__(self, other: Union[Real, 'Expression']) -> 'Expression':
         if isinstance(other, (int, float)):  # Expression + number
             base = self.core_mat.copy()
@@ -283,23 +247,18 @@ class Expression(object):
             raise NotImplementedError(
                 f"unsupported operand type(s) for +: {type(self).__name__} and {type(other).__name__}")
 
-    # @constraint_check
     def __radd__(self, other: 'Expression') -> 'Expression':
         return self + other
 
-    # @constraint_check
     def __sub__(self, other: 'Expression') -> 'Expression':
         if not isinstance(other, (Expression, int, float)):
             raise NotImplementedError(
                 f"unsupported operand type(s) for -: {type(self).__name__} and {type(other).__name__}")
         return self + -other
 
-    # @constraint_check
     def __rsub__(self, other: 'Expression'):
         return -self + other
 
-    # @_cast_other
-    # @constraint_check
     def __mul__(self, other: Union[Real, 'Expression']) -> 'Expression':
         if isinstance(other, (int, float)):  # number * Expression
             return Expression(self.core_mat * other)
@@ -322,7 +281,6 @@ class Expression(object):
             raise NotImplementedError(
                 f"unsupported operand type(s) for *: {type(self).__name__} and {type(other).__name__}")
 
-    # @constraint_check
     def __rmul__(self, other) -> 'Expression':
         return self * other
 
@@ -333,7 +291,6 @@ class Expression(object):
     # def __rdiv__(self, other) -> 'Expression':
     #     return other / self
 
-    # @constraint_check
     def __pow__(self, power: int, modulo=None) -> 'Expression':
         if self.highest_order > 1:
             raise NotImplementedError("the result will exceed quadratic, which is unsupported now")
@@ -342,27 +299,21 @@ class Expression(object):
         base = np.outer(_self, _self)
         return Expression((base.transpose() + base) / 2)
 
-    # @constraint_check
     def __neg__(self) -> 'Expression':
         return self * -1
 
-    # @constraint_check
     def __eq__(self, other) -> 'Constraint':
         return Constraint(self, other, OP_EQUAL)
 
-    # @constraint_check
     def __ge__(self, other) -> 'Constraint':
         return Constraint(self, other, OP_GE)
 
-    # @constraint_check
     def __gt__(self, other) -> 'Constraint':
         return Constraint(self, other, OP_GT)
 
-    # @constraint_check
     def __le__(self, other) -> 'Constraint':
         return Constraint(self, other, OP_LE)
 
-    # @constraint_check
     def __lt__(self, other) -> 'Constraint':
         return Constraint(self, other, OP_LE)
 
@@ -370,7 +321,6 @@ class Expression(object):
         return f"{self.core_mat.__str__()} (mat)"
 
     __repr__ = __str__
-
 
 
 class Constraint(object):

@@ -113,3 +113,6 @@ ENV/
 .idea/
 
 tests/*.mps
+
+# Pip
+Pipfile
