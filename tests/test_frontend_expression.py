@@ -66,23 +66,6 @@ def assert_expression(expr: Expression, expect: tuple):
                                      (3, 3), -2, 3, 2),
                                  None,
                                  ""
-                             ),
-                             (  # 4.4*x, in index, para way
-                                 (None, 0, 4.4),
-                                 (
-                                     np.array([[0, 2.2], [2.2, 0]]), np.array([4.4, 0]), 1,
-                                     (2, 2), 0, 2, 1),
-                                 None,
-                                 ""
-                             ),
-                             (  # -3*z, in index, para way
-                                 (None, 2, -3),
-                                 (
-                                     np.array([[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, -1.5], [0, 0, -1.5, 0]]),
-                                     np.array([0, 0, -3, 0]), 1,
-                                     (4, 4), 0, 4, 3),
-                                 None,
-                                 ""
                              )
                          ])
 def test_init(input_data: tuple, expect: tuple, expect_exception: _E, except_exception_match: str):
@@ -151,12 +134,7 @@ def test_expand(input_data: tuple, expect: Expression, expect_exception: _E, exp
     (
         Expression(np.array([[0, 0.5], [0.5, 0]])),  # x
         np.array([1, 0]), None, ""
-    ),
-    (
-        Expression(None, 1, 1),  # y, in index, para way
-        np.array([0, 1, 0]), None, ""
     )
-    # (Expression(), np.array(), None, "")
 ])
 def test_linear_complete_vector(input_data: Expression, expect: np.ndarray, expect_exception: _E,
                                 expect_exception_match: str):
@@ -169,7 +147,8 @@ def test_linear_complete_vector(input_data: Expression, expect: np.ndarray, expe
 
 @pytest.mark.parametrize("a, b, expect, expect_exception, expect_exception_match", [
     (  # x+y
-        Expression(None, var_index=0, para_val=1), Expression(None, var_index=1, para_val=1),  # x+y
+        Expression(np.array([[0, 0, 0.5], [0, 0, 0], [0.5, 0, 0]])),
+        Expression(np.array([[0, 0, 0], [0, 0, 0.5], [0, 0.5, 0]])),  # x+y
         Expression(np.array([[0, 0, 0.5], [0, 0, 0.5], [0.5, 0.5, 0]])), None, ""
     ),
     # (Expression(),Expression(),Expression(),None,""),

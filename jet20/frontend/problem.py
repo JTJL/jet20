@@ -8,7 +8,6 @@ import numpy as np
 import re
 
 
-
 def assert_power(add_expr):
     """
     """
@@ -48,7 +47,7 @@ class Problem(object):
         """
         return len(self._variables)
 
-    def variable(self, name: str, lb:Union[None, float] = None, ub:Union[None, float] = None) -> Variable:
+    def variable(self, name: str, lb: Union[None, float] = None, ub: Union[None, float] = None) -> Variable:
         """Adding single variable with the name annotation.
         Args:
             name: The name of a variable
@@ -79,19 +78,19 @@ class Problem(object):
 
         _var_names = list(filter(None, re.split("[ ,;]", symbols)))
 
-        if isinstance(lb,list) and len(_var_names) != len(lb):
+        if isinstance(lb, list) and len(_var_names) != len(lb):
             raise ValueError("mismatch length of lower bounds vector and variables vector")
-        if isinstance(ub,list) and len(_var_names) != len(ub):
+        if isinstance(ub, list) and len(_var_names) != len(ub):
             raise ValueError("mismatch length of upper bounds vector and variables vector")
 
-        if lb is None or isinstance(lb,(float,int)):
+        if lb is None or isinstance(lb, (float, int)):
             lb = [lb] * len(_var_names)
 
-        if ub is None or isinstance(ub,(float,int)):
+        if ub is None or isinstance(ub, (float, int)):
             ub = [ub] * len(_var_names)
 
         _vars = Array()
-        for symbol,lb,ub in zip(_var_names,lb,ub):
+        for symbol, lb, ub in zip(_var_names, lb, ub):
             _var = Variable(self.variables_count, symbol, lb, ub)
             _vars.append(_var)
             self._variables.append(_var)
@@ -156,16 +155,16 @@ class Problem(object):
                 object          constraits             ops              consts
         """
 
-
         for _var in self._variables:
             if _var.lb is not None:
                 self._constraints.append(Constraint(_var, _var.lb, OP_GE))
             if _var.ub is not None:
                 self._constraints.append(Constraint(_var, _var.ub, OP_LE))
 
-        _obj = self._subject.core_mat  # TODO: 是否要去掉const
+        _obj = self._subject.core_mat  # need cut const off here?
         exprs, ops = list(zip(*[con.canonicalize() for con in self._constraints]))  # unzip constraints, ops
-        _constraints = np.stack([con.expand_linear_vector(len(self._variables)+1)[:-1] for con in exprs])  # cut const off
+        _constraints = np.stack(
+            [con.expand_linear_vector(len(self._variables) + 1)[:-1] for con in exprs])  # cut const off
         _ops = np.array(ops)
         _consts = np.array([-con.const for con in exprs])
         return _obj, _constraints, _ops, _consts
@@ -203,7 +202,7 @@ class Problem(object):
         """
         return self._solver[name](self, *args, **kwargs)
 
-    def reg_solver(self, name: str, func: Callable):  # TODO:可否约束func签名
+    def reg_solver(self, name: str, func: Callable):
         """Register a solver, it will be called to solve the problem later.
         Args:
             name: Name annotation of this solver.
