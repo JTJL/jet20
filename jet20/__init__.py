@@ -1,6 +1,6 @@
 """Top-level package for Jet20."""
 
-__author__ = """watermirror"""
+__author__ = """watermirror ai team"""
 __email__ = 'gaolei@watermirror.ai'
 __version__ = '0.5.3'
 
